@@ -57,11 +57,11 @@ function server(lang, web, seen) {
     }
     if (url.pathname === "/api/archive/export") {
       seen.push([req.method() + " export", name]);
-      return json({ path: "~/Downloads/magpie-request-" + name.replace("/", "-") + ".json" });
+      return json({ path: "~/Downloads/Echo-request-" + name.replace("/", "-") + ".json" });
     }
     if (url.pathname === "/api/archive/file") {
       seen.push([req.method() + " file", name]);
-      return route.fulfill({ status: 200, headers: { "Content-Disposition": `attachment; filename="magpie-request-${name.replace("/", "-")}.json"` }, contentType: "application/json", body: "{}" });
+      return route.fulfill({ status: 200, headers: { "Content-Disposition": `attachment; filename="Echo-request-${name.replace("/", "-")}.json"` }, contentType: "application/json", body: "{}" });
     }
     if (url.pathname.startsWith("/api/")) return json({});
     const file = path.join(assets, url.pathname === "/" ? "index.html" : url.pathname);
@@ -157,7 +157,7 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
             await press(dl);
             await wait(2);
             assert.deepEqual(seen[1], ["POST export", KEPT]);
-            const said = `~/Downloads/magpie-request-${KEPT.replace("/", "-")}.json`;
+            const said = `~/Downloads/Echo-request-${KEPT.replace("/", "-")}.json`;
             await p.waitForFunction((s) => document.querySelector("#status").textContent.includes(s), said);
           }
 

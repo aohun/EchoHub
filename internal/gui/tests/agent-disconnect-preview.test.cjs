@@ -19,7 +19,7 @@ const changes = (id) => [
   },
   {
     path: id === "omp" ? "~/.omp/agent/models.yml" : "~/.codex/models.json",
-    lines: [{ op: "~", text: "providers: {}", was: "providers: {magpie: {baseUrl: 'http://127.0.0.1:3425/v1', models: [{id: group/auto-model, name: Auto model}]}}" }],
+    lines: [{ op: "~", text: "providers: {}", was: "providers: {Echo: {baseUrl: 'http://127.0.0.1:3425/v1', models: [{id: group/auto-model, name: Auto model}]}}" }],
   },
 ];
 
@@ -74,7 +74,7 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
         page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
         await page.route("**/*", serve(lang, textSize, posts));
         await page.goto("http://magpie.test/?view=agents");
-        assert.equal(await page.title(), "magpie");
+        assert.equal(await page.title(), "Echo");
         assert.equal(new URL(page.url()).searchParams.get("view"), "agents");
         for (const id of ["omp", "codex"]) {
           await page.locator(`.row.agent[data-id="${id}"] .ag-conn`).click();

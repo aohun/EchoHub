@@ -1,6 +1,6 @@
-// Plugins: the market of OpenCode provider plugins — subscriptions magpie
+// Plugins: the market of OpenCode provider plugins — subscriptions Echo
 // signs in to through someone else's code. Discover lists the plugins
-// magpie suggests (the community repo's list, with what npm says of each
+// Echo suggests (the community repo's list, with what npm says of each
 // now) and finds the rest on npm; Installed is what was added, to sign in
 // with, update, switch off or remove. Each part is drawn as it comes
 // (#488): what's installed from /api/plugins, the plugins suggested from
@@ -74,7 +74,7 @@
   function kindChip(mw) {
     const c = el("span", "pm-chip kind " + (mw ? "mw" : "pv"));
     c.append(glyph(mw ? PIPE : PLUG, 10, 1.5), el("span", "", mw ? t("Middleware") : t("Provider")));
-    c.title = mw ? t("Runs in magpie's gateway on the requests your agents send and on the replies") : t("Signs in to a subscription and serves its models");
+    c.title = mw ? t("Runs in Echo's gateway on the requests your agents send and on the replies") : t("Signs in to a subscription and serves its models");
     return c;
   }
   function logo(ic, big, mw) {
@@ -365,8 +365,8 @@
     const by = el("div", "pm-by");
     if (l.community) {
       const v = el("span", "pm-verified");
-      v.append(glyph(SHIELD, 11, 1.5), el("span", "", t("magpie community")));
-      v.title = t("Written for magpie by its community, in github.com/magpie-community/plugins");
+      v.append(glyph(SHIELD, 11, 1.5), el("span", "", t("Echo community")));
+      v.title = t("Written for Echo by its community, in github.com/magpie-community/plugins");
       by.append(v);
     } else by.append(el("span", "", l.npm?.publisher || l.package));
     who.append(by);
@@ -399,7 +399,7 @@
     else if (e?.off) meta.append(el("span", "pm-chip", t("Off")));
     if (l.replaces) {
       const b = el("span", "pm-chip soft", t("Also built in"));
-      b.title = t("magpie also signs in to this itself, for now; the plugin keeps it working if the built-in one is retired");
+      b.title = t("Echo also signs in to this itself, for now; the plugin keeps it working if the built-in one is retired");
       meta.append(b);
     }
     c.append(top, sum, meta);
@@ -544,11 +544,11 @@
     const ls = listings.filter((l) => !f || [l.name, l.package, summary(l), (l.providers || []).join(" "), l.npm?.publisher || ""].join(" ").toLowerCase().includes(f));
     if (!f) {
       body.append(intro());
-      // magpie's community's alone: others' plugins are found by a search
+      // Echo's community's alone: others' plugins are found by a search
       const ours = ls.filter((l) => l.community && l.kind !== "middleware");
       const mws = ls.filter((l) => l.community && l.kind === "middleware");
-      if (ours.length) body.append(section(t("Subscriptions"), t("written for magpie, checked against its own sign-ins"), ours));
-      if (mws.length) body.append(section(t("Gateway middleware"), t("runs in magpie's gateway on what every agent sends and gets back, whichever provider serves it"), mws));
+      if (ours.length) body.append(section(t("Subscriptions"), t("written for Echo, checked against its own sign-ins"), ours));
+      if (mws.length) body.append(section(t("Gateway middleware"), t("runs in Echo's gateway on what every agent sends and gets back, whichever provider serves it"), mws));
       body.append(manual());
       return;
     }
@@ -577,7 +577,7 @@
     text.append(el("h2", "", t("Subscriptions and gateway middleware")));
     text.append(el("p", "", t("Plugins sign in to coding plans and make their requests; the models then work in every agent, like any provider's. They're OpenCode's provider plugins or pi's packages, run on Bun.")));
     const mw = el("p", "");
-    mw.append(document.createTextNode(t("A plugin can also be middleware in magpie's gateway: it reads and rewrites what agents send and get back, for every provider.") + " "));
+    mw.append(document.createTextNode(t("A plugin can also be middleware in Echo's gateway: it reads and rewrites what agents send and get back, for every provider.") + " "));
     // the docs in the reader's language: the site has en, zh and ja
     const how = el("a", "pm-link", "");
     how.href = "https://usemagpie.ai/docs/" + ({ zh: "zh/", ja: "ja/" }[lang()] || "") + "plugins#middleware";
@@ -615,7 +615,7 @@
       act("+", "add", { spec: s }, () => status(t("{name} is installed", { name: s }), "ok"));
     };
     box.append(spec);
-    // a folder is picked, not typed, where magpie can show the system's
+    // a folder is picked, not typed, where Echo can show the system's
     // picker (`magpie web` can't, and the market says so)
     if (mine?.picker) box.append(browse(spec, go));
     box.append(go);
@@ -724,9 +724,9 @@
       c.title = whyText(ck);
       nm.append(c);
     } else if (e.autoUpdated && e.autoUpdated.to === e.version) {
-      // magpie updated it by itself lately: the row says so, quietly
+      // Echo updated it by itself lately: the row says so, quietly
       const c = el("span", "pm-chip soft", t("Auto-updated"));
-      c.title = t("magpie updated it from v{from} to v{to} on {date}", { from: e.autoUpdated.from, to: e.autoUpdated.to, date: new Date(e.autoUpdated.at).toLocaleDateString(document.documentElement.lang || undefined, { month: "short", day: "numeric" }) });
+      c.title = t("Echo updated it from v{from} to v{to} on {date}", { from: e.autoUpdated.from, to: e.autoUpdated.to, date: new Date(e.autoUpdated.at).toLocaleDateString(document.documentElement.lang || undefined, { month: "short", day: "numeric" }) });
       nm.append(c);
     } else if ((ck?.status === "current" || ck?.status === "update") && e.version) {
       const c = el("span", "pm-chip soft", t("Up to date"));
@@ -743,7 +743,7 @@
       c.title = t("{names} runs on this plugin in place of the built-in", { names });
       nm.append(c);
     }
-    // gateway middleware runs in magpie's gateway, not as a subscription:
+    // gateway middleware runs in Echo's gateway, not as a subscription:
     // the row says so, and how it is doing, on a line of its own
     const mw = e.middleware;
     if (mw || e.isMiddleware) nm.append(kindChip(true));
@@ -767,14 +767,14 @@
         const s = el("span", "pm-sub" + (x.signedIn ? " in" : ""));
         // its built-in runs it, with its accounts: nothing to fix here
         const builtin = !x.signedIn && cands.some((c) => c.id === x.pid);
-        s.append(el("span", "dot"), el("span", "", x.signedIn ? t("{name}: signed in", { name: x.name }) : builtin ? t("{name}: on magpie's built-in", { name: x.name }) : t("{name}: not signed in", { name: x.name })));
-        if (builtin) s.title = t("{name} runs on magpie's built-in, with your accounts; Move {name} here runs it on this plugin", { name: x.name });
+        s.append(el("span", "dot"), el("span", "", x.signedIn ? t("{name}: signed in", { name: x.name }) : builtin ? t("{name}: on Echo's built-in", { name: x.name }) : t("{name}: not signed in", { name: x.name })));
+        if (builtin) s.title = t("{name} runs on Echo's built-in, with your accounts; Move {name} here runs it on this plugin", { name: x.name });
         else if (!x.signedIn && subs.some((y) => y.signedIn)) s.title = t("{name} is a subscription of its own; {other} works without it", { name: x.name, other: subs.find((y) => y.signedIn).name });
         sub.append(s);
       }
     } else if (mw && !e.providers.length) {
       // only middleware: its own line says what it does
-    } else sub.textContent = e.providers.length ? t("Signs in to {names}", { names: e.providers.join(t(", ")) }) : t("Signs in to nothing magpie can use");
+    } else sub.textContent = e.providers.length ? t("Signs in to {names}", { names: e.providers.join(t(", ")) }) : t("Signs in to nothing Echo can use");
     if (sub.textContent) who.append(sub);
     if (mw && !e.off && !ask) who.append(mwLine(mw));
     if (mw && !e.off && !ask && editing?.pkg === pkg) who.append(optionsEditor(e));
@@ -785,7 +785,7 @@
       const up = el("button", "text", b === "upgrade" ? t("Updating…") : t("Update"));
       up.disabled = busy.size > 0 || checking;
       // the community's would come by itself: Update brings it now
-      if (pkg.startsWith("@magpie-community/") && !/@(?!latest$)[^@/]+$/.test(e.spec.slice(pkg.length))) up.title = t("magpie updates it by itself within the hour; Update does it now");
+      if (pkg.startsWith("@magpie-community/") && !/@(?!latest$)[^@/]+$/.test(e.spec.slice(pkg.length))) up.title = t("Echo updates it by itself within the hour; Update does it now");
       up.onclick = () => act(pkg, "upgrade", { spec: e.spec }, () => status(t("{name} updated to v{v}", { name: l?.name || pkg, v: e.latest }), "ok"));
       val.append(up);
     } else if (isGit(e.spec) && !e.off) {
@@ -948,7 +948,7 @@
     const nm = el("div", "pm-name");
     nm.append(el("b", "", l.name));
     const by = el("div", "pm-by"); // the words in a span of their own, or a flex row cuts them without the ellipsis
-    by.append(el("span", "", l.community ? t("magpie community") + " · " + l.package : [l.npm?.publisher, l.package].filter(Boolean).join(" · ")));
+    by.append(el("span", "", l.community ? t("Echo community") + " · " + l.package : [l.npm?.publisher, l.package].filter(Boolean).join(" · ")));
     who.append(nm, by);
     const actBox = el("div", "pm-dact");
     // redrawn only when what it would say changes: a button made afresh
@@ -988,7 +988,7 @@
     link(t("Source"), l.npm?.repository);
     if (l.npm?.homepage && l.npm.homepage !== l.npm.repository && !l.npm.homepage.startsWith(l.npm.repository + "#")) link(t("Homepage"), l.npm.homepage);
     main.append(links);
-    if (l.replaces) main.append(el("p", "pm-note", t("magpie also signs in to this itself, for now; the plugin keeps it working if the built-in one is retired.")));
+    if (l.replaces) main.append(el("p", "pm-note", t("Echo also signs in to this itself, for now; the plugin keeps it working if the built-in one is retired.")));
     const readme = el("div", "pm-readme");
     readme.append(el("div", "pm-rskel"), el("div", "pm-rskel short"), el("div", "pm-rskel"));
     main.append(readme);

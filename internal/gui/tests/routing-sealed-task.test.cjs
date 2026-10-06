@@ -86,7 +86,7 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
       const sealed = lang === "zh" ? /任务已加密.*只能使用 ChatGPT/ : /task is encrypted.*Only ChatGPT/;
       const excluded = lang === "zh" ? /其他供应商（如 Claude）不参与选择/ : /other providers \(such as Claude\) are excluded/;
       const parent = lang === "zh" ? /回答了主代理/ : /answered the parent agent/;
-      const selected = lang === "zh" ? /由 magpie 在此路由组内选择模型/ : /magpie selects its model/;
+      const selected = lang === "zh" ? /由 Echo 在此路由组内选择模型/ : /Echo selects its model/;
       const allowance = lang === "zh" ? /剩余额度 ÷ 距重置小时数/ : /remaining allowance per hour/;
 
       const story = () => page.locator(".rt-steps").textContent();

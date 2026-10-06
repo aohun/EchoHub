@@ -16,10 +16,10 @@ const { chromium, webkit } = require("playwright");
 
 const assets = path.resolve(__dirname, "../assets");
 const words = {
-  en: { name: "Keep awake while agents work", sub: "Keeps this computer from going to sleep by itself while agents work through magpie and for ten minutes after; the display may still turn off", on: "On", off: "Off", display: "Screen on too", displaySub: "Keeps this computer from going to sleep and its display on while agents work through magpie and for ten minutes after" },
-  zh: { name: "防止睡眠（Agent 工作时）", sub: "Agent 通过 magpie 工作时及之后十分钟内，阻止这台电脑自动睡眠；屏幕仍可能关闭", on: "开启", off: "关闭", display: "屏幕也常亮", displaySub: "Agent 通过 magpie 工作时及之后十分钟内，阻止这台电脑睡眠，屏幕也保持常亮、不锁屏" },
-  ja: { name: "エージェントの作業中はスリープしない", sub: "エージェントが magpie 経由で作業している間とその後 10 分間、このコンピューターが自動でスリープしないようにします。ディスプレイはオフになることがあります", on: "オン", off: "オフ", display: "画面もオン", displaySub: "エージェントが magpie 経由で作業している間とその後 10 分間、このコンピューターをスリープさせず、ディスプレイもオンのままにします" },
-  de: { name: "Wach halten, während Agenten arbeiten", sub: "Verhindert, dass dieser Computer von selbst in den Ruhezustand geht, während Agenten über magpie arbeiten, und zehn Minuten danach; der Bildschirm kann sich trotzdem ausschalten", on: "An", off: "Aus", display: "Bildschirm auch an", displaySub: "Verhindert, dass dieser Computer in den Ruhezustand geht, und hält den Bildschirm an, während Agenten über magpie arbeiten, und zehn Minuten danach" },
+  en: { name: "Keep awake while agents work", sub: "Keeps this computer from going to sleep by itself while agents work through Echo and for ten minutes after; the display may still turn off", on: "On", off: "Off", display: "Screen on too", displaySub: "Keeps this computer from going to sleep and its display on while agents work through Echo and for ten minutes after" },
+  zh: { name: "防止睡眠（Agent 工作时）", sub: "Agent 通过 Echo 工作时及之后十分钟内，阻止这台电脑自动睡眠；屏幕仍可能关闭", on: "开启", off: "关闭", display: "屏幕也常亮", displaySub: "Agent 通过 Echo 工作时及之后十分钟内，阻止这台电脑睡眠，屏幕也保持常亮、不锁屏" },
+  ja: { name: "エージェントの作業中はスリープしない", sub: "エージェントが Echo 経由で作業している間とその後 10 分間、このコンピューターが自動でスリープしないようにします。ディスプレイはオフになることがあります", on: "オン", off: "オフ", display: "画面もオン", displaySub: "エージェントが Echo 経由で作業している間とその後 10 分間、このコンピューターをスリープさせず、ディスプレイもオンのままにします" },
+  de: { name: "Wach halten, während Agenten arbeiten", sub: "Verhindert, dass dieser Computer von selbst in den Ruhezustand geht, während Agenten über Echo arbeiten, und zehn Minuten danach; der Bildschirm kann sich trotzdem ausschalten", on: "An", off: "Aus", display: "Bildschirm auch an", displaySub: "Verhindert, dass dieser Computer in den Ruhezustand geht, und hält den Bildschirm an, während Agenten über Echo arbeiten, und zehn Minuten danach" },
 };
 
 function serve(lang, web, posted, st) {

@@ -1,7 +1,7 @@
 // Routing, live: the gateway's own trace of each request, played as it
-// happens. A magpie carries each request from its agent through magpie to
+// happens. A Echo carries each request from its agent through Echo to
 // the account routing put first; another brings the answer back — or,
-// from one that can't answer, the failure back to magpie, and the first
+// from one that can't answer, the failure back to Echo, and the first
 // takes the request on to the next. Every agent sending at once plays at
 // once, each from its own place on the left. Every row, number and sentence comes from what the gateway
 // recorded while deciding (see internal/gateway/trace.go) — the order it
@@ -38,9 +38,9 @@
   logo.setAttribute("class", "rt-bird");
   logo.innerHTML = '<use href="#bird"/>';
   const hubSub = el("small"), chip = el("i");
-  hub.append(logo, el("b", "", "magpie"), hubSub, chip);
+  hub.append(logo, el("b", "", "Echo"), hubSub, chip);
   const list = el("ol", "rt-accts");
-  // the magpies fly over the nodes, the wires run under them
+  // the Echos fly over the nodes, the wires run under them
   const sky = document.createElementNS(NS, "svg");
   sky.setAttribute("class", "rt-sky");
   sky.setAttribute("aria-hidden", "true");
@@ -318,8 +318,8 @@
     "": ["Smart", "Smart: of the accounts with quota to spare, the one whose allowance renews soonest goes first — what it has left would be lost at the reset. The week decides; an account with five hours and no week goes by its five hours. One at 90% or more waits until the others can't answer; one resting after a failure goes last."],
     order: ["In order", "In order: the first answers everything until it can't; then the next."],
     rotate: ["In turn", "In turn: each conversation's next turn goes to the account after the one that answered its last, and a new conversation starts one further along; the requests within a turn stay put, keeping the prompt cache."],
-    usage: ["Least used", "Least used first: the account with the most of its allowance left goes first; a key by the tokens magpie sent it lately."],
-    pace: ["Weekly pace", "Weekly pace: the account with the most of its week left per hour until it renews goes first — the one with the most to lose at its reset; an account with five hours and no week by what its five hours have left per hour. One at 90% or more waits until the others can't answer; a key by the tokens magpie sent it lately."],
+    usage: ["Least used", "Least used first: the account with the most of its allowance left goes first; a key by the tokens Echo sent it lately."],
+    pace: ["Weekly pace", "Weekly pace: the account with the most of its week left per hour until it renews goes first — the one with the most to lose at its reset; an account with five hours and no week by what its five hours have left per hour. One at 90% or more waits until the others can't answer; a key by the tokens Echo sent it lately."],
     manual: ["Manual", "Manual: every request goes to the model picked on the group's card, over its own accounts or keys."],
   };
   const GROUP_ORDER = "In order: member by member, the first model the group names until it can't answer, each over its own accounts or keys as its provider routes them.";
@@ -539,7 +539,7 @@
     if (x.use && x.instead) return lead ? t("Rule {n} matches, but {use} has no account or key that can take this request, so a later matching rule puts {instead} first.", { n: x.n, use: x.use, instead: useName(r, x.instead) }) : null;
     if (lead) return null;
     if (x.use) return t("Rule {n} matches, but {use} has no account or key that can take this request, so the group's order stands.", { n: x.n, use: x.use });
-    if (x.waits) return t("This turn began before magpie saw it, so the rules wait for the next one.");
+    if (x.waits) return t("This turn began before Echo saw it, so the rules wait for the next one.");
     if (x.held) return null;
     return t("No rule matches turn {turn} (about {n} tokens{img}).", { turn: x.turn, n: tokens(x.tokens), img: x.images ? t(", with an image") : "" });
   }
@@ -689,7 +689,7 @@
   const BLOCKED = "the provider's network firewall blocked requests from this IP; wait a while, or switch to another network or proxy";
   // what it says of ZCode's Start Plan turning a request away (#425,
   // provider.ZCodeStartBlockedHint), in place of BLOCKED
-  const ZCODE_BLOCKED = "ZCode's Start Plan still turned this request away, though magpie sends it as the ZCode app does; it can be a network block of this IP, or ZCode checking for something new. Use an account with a GLM Coding Plan, or add another provider to this group";
+  const ZCODE_BLOCKED = "ZCode's Start Plan still turned this request away, though Echo sends it as the ZCode app does; it can be a network block of this IP, or ZCode checking for something new. Use an account with a GLM Coding Plan, or add another provider to this group";
   const HINTS = [WB_REFUSED, BLOCKED, ZCODE_BLOCKED];
 
   function trySaid(r, i) {
@@ -723,8 +723,8 @@
     if (tr.fail === "auth") {
       const next = r.tries[i + 1], nw = next && tried(r, next);
       return next
-        ? t("{who} could not authenticate. Sign in again in magpie; this login is not retried. The request went to {next}.", { who: name, next: nw ? who(nw) : t("the next") })
-        : t("{who} could not authenticate. Sign in again in magpie; this login is not retried. No other account could answer.", { who: name });
+        ? t("{who} could not authenticate. Sign in again in Echo; this login is not retried. The request went to {next}.", { who: name, next: nw ? who(nw) : t("the next") })
+        : t("{who} could not authenticate. Sign in again in Echo; this login is not retried. No other account could answer.", { who: name });
     }
     if (tr.fail === "foreign")
       return t("{who} couldn't read the reasoning another account wrote earlier in this conversation, so it is asked again without it, before any of the reply reaches {agent}.", { who: name, agent });
@@ -752,8 +752,8 @@
       return t("{who} hadn't begun answering after {ms}, so the request went on to the next before any of it reached {agent}. Nothing is wrong with {who}, so it doesn't rest.", { who: name, ms: took(tr.ms), agent });
     if (tr.fail === "proxy")
       return r.tries[i + 1]
-        ? t("{who}: the proxy magpie goes through didn't take the connection, so the request never reached the vendor and goes on to the next. Nothing is wrong with {who}, so it doesn't rest: once the proxy is up it is asked first again.", { who: name })
-        : t("{who}: the proxy magpie goes through didn't take the connection, so the request never reached the vendor, and nobody is left to try: {agent} gets the error. Start the proxy, or change it in Settings.", { who: name, agent });
+        ? t("{who}: the proxy Echo goes through didn't take the connection, so the request never reached the vendor and goes on to the next. Nothing is wrong with {who}, so it doesn't rest: once the proxy is up it is asked first again.", { who: name })
+        : t("{who}: the proxy Echo goes through didn't take the connection, so the request never reached the vendor, and nobody is left to try: {agent} gets the error. Start the proxy, or change it in Settings.", { who: name, agent });
     if (tr.again)
       return t("{who} answered {status} · {fail}, and nobody else is left to ask — a failure that may pass, so it is tried again in {d}, before any of the reply reaches {agent}.",
         { who: name, status: tr.status, fail: failWord(tr.fail), d: took(tr.again), agent });
@@ -791,7 +791,7 @@
   let capQ = [], capAt = -1e9, capLo = false, flipUntil = 0;
 
   // fly carries a dot along paths one after another, as one flight — and
-  // the magpie holding it in its beak, if there is one
+  // the Echo holding it in its beak, if there is one
   const fly = (dot, bird, legs, ms) => new Promise((res) => {
     if (!shown()) { res(); return; } // no hidden frame is needed to finish it
     const tr = { dot, bird, legs, t0: performance.now(), ms: still() ? 0 : ms, res, g: gen };
@@ -810,7 +810,7 @@
     const n = Math.hypot(tx, ty) || 1;
     return { x: a.x, y: a.y, tx: tx / n, ty: ty / n };
   };
-  // via is the way through magpie from one wire to the next: a gentle arc
+  // via is the way through Echo from one wire to the next: a gentle arc
   // across it, carrying on the way the flight came in and leaving the way
   // the next wire goes — or, out the side it came in, a loop round inside.
   // It follows the wires as they move.
@@ -866,7 +866,7 @@
         const mx = (h.r + a.l) / 2;
         return `M${h.r} ${h.cy} C${mx} ${h.cy} ${mx} ${a.cy} ${a.l} ${a.cy}`;
       }
-      // the accounts sit under magpie: a lane down their left, from below the agents too
+      // the accounts sit under Echo: a lane down their left, from below the agents too
       const x = a.l - 12, y = Math.max(h.b, low - 8);
       return `M${h.cx} ${h.b} L${h.cx} ${y} C${h.cx} ${y + 22} ${x} ${y + 2} ${x} ${y + 24} L${x} ${a.cy - 10} Q${x} ${a.cy} ${a.l} ${a.cy}`;
     };
@@ -1006,7 +1006,7 @@
     s.li.title = info.rules ? t(info.rules === 1 ? "1 rule" : "{n} rules", { n: info.rules }) : "";
     return s;
   }
-  // wiresTo is the way from magpie to a row: through the headings of the
+  // wiresTo is the way from Echo to a row: through the headings of the
   // groups it is in, then its own wire
   function wiresTo(row) {
     const via = row.w.via || [], out = [];
@@ -1302,7 +1302,7 @@
         if (p.refused) s += " · " + t("Copilot refused it: {error}", { error: p.refused });
         items.push([s, "aside"]);
       }
-      // what the vendor said, word for word: the why above is magpie's reading of it
+      // what the vendor said, word for word: the why above is Echo's reading of it
       if (tr.done && !tryOk(tr) && tr.error) {
         const hint = HINTS.find((h) => tr.error.endsWith(" — " + h));
         const said = hint ? tr.error.slice(0, -(hint.length + 3)) : tr.error;
@@ -1311,7 +1311,7 @@
       }
       // the reply said another model answered it
       if (tr.done && tryOk(tr) && tr.swapped) items.push([swapWhy(tr), "swap", tr]);
-      // another magpie's routing group named the member it routed to
+      // another Echo's routing group named the member it routed to
       else if (tr.done && tryOk(tr) && tr.routed) items.push([routedWhy(tr), "aside", tr]);
       if (tr.done && tryOk(tr) && tr.upstream) items.push([upstreamWhy(tr), "aside upstream-said", tr]);
     });
@@ -1365,7 +1365,7 @@
   // Codex names it (x-openai-subagent): its own guardian review of an
   // approval, a thread's title, memories… — each on the model Codex picks
   // for it, so a list of Luna calls under a Sol composer reads as it is.
-  // A web search is magpie's own, run for a model that can't search on the
+  // A web search is Echo's own, run for a model that can't search on the
   // model it searches with (a DeepSeek chat showing GPT calls, #314)
   const knownKind = (k) => Object.hasOwn(REQUEST_KINDS, k) ? REQUEST_KINDS[k] : null;
   const kindName = (k) => knownKind(k) ? t(knownKind(k).name) : k;
@@ -1395,7 +1395,7 @@
   }
   const swapWhy = (tr) => t("The vendor was asked for {sent}, but its reply says {served} answered: likely another model. The same model under a dated name or spelled otherwise isn't marked.", { sent: tr.model, served: tr.served });
   window.swapWhy = swapWhy; // the Usage page's Requests say it too
-  // a try that asked a remote magpie for one of its routing groups: the
+  // a try that asked a remote Echo for one of its routing groups: the
   // reply names the member the group routed to, which is the group
   // picking, not a swap — shown plain, as a model that answered
   function routedTag(tr) {
@@ -1403,7 +1403,7 @@
     k.title = routedWhy(tr);
     return k;
   }
-  const routedWhy = (tr) => t("{sent} is a routing group of the remote magpie, and it routed the request to {served}: the group picking one of its models, not the vendor swapping the model.", { sent: tr.model, served: tr.served });
+  const routedWhy = (tr) => t("{sent} is a routing group of the remote Echo, and it routed the request to {served}: the group picking one of its models, not the vendor swapping the model.", { sent: tr.model, served: tr.served });
   window.routedWhy = routedWhy;
   // the provider an aggregator (OpenRouter …) said answered behind it:
   // DeepInfra, Novita… (leslie_luo on Discord)
@@ -1416,16 +1416,16 @@
   function kindWhy(r) {
     const agent = agentName(r.agent);
     if (purposeOf(r.kind) === "kind:collab_spawn") return r.group
-      ? t("{agent} requested a subagent; magpie selects its model within this routing group.", { agent })
+      ? t("{agent} requested a subagent; Echo selects its model within this routing group.", { agent })
       : t("{agent} requested a subagent on {model}.", { agent, model: r.model });
     if (purposeOf(r.kind) === "kind:ambient_suggestions") return t("{agent} drafted the suggested prompts on its home page by itself, in the background, searching the project's files and connected apps, and checked them for safety. Not a turn of the conversation; Codex's Settings › Configuration › Suggested prompts turns it off.", { agent });
     if (r.kind === "luna_reserve") return t("{agent} sent this turn on Luna Reserve, which it turns to once the plan's own allowance is used up; it picks the model itself.", { agent });
     if (r.kind === "web_search") return r.for
-      ? t("magpie ran this web search for {agent}'s {model}, which can't search the web by itself: {searcher} searched, and {model} goes on answering once it has what was found. Not a turn of the conversation.", { agent: agentName(r.for.agent), model: r.for.model, searcher: r.model })
-      : t("magpie ran this web search for a model that can't search the web by itself: {searcher} searched, and that model goes on answering once it has what was found. Not a turn of the conversation.", { searcher: r.model });
+      ? t("Echo ran this web search for {agent}'s {model}, which can't search the web by itself: {searcher} searched, and {model} goes on answering once it has what was found. Not a turn of the conversation.", { agent: agentName(r.for.agent), model: r.for.model, searcher: r.model })
+      : t("Echo ran this web search for a model that can't search the web by itself: {searcher} searched, and that model goes on answering once it has what was found. Not a turn of the conversation.", { searcher: r.model });
     if (r.kind === "vision") return r.for
-      ? t("magpie had {describer} describe an image for {agent}'s {model}, which can't see images: {model} is given the description in the image's place. Not a turn of the conversation.", { agent: agentName(r.for.agent), model: r.for.model, describer: r.model })
-      : t("magpie had {describer} describe an image for a model that can't see images, which is given the description in the image's place. Not a turn of the conversation.", { describer: r.model });
+      ? t("Echo had {describer} describe an image for {agent}'s {model}, which can't see images: {model} is given the description in the image's place. Not a turn of the conversation.", { agent: agentName(r.for.agent), model: r.for.model, describer: r.model })
+      : t("Echo had {describer} describe an image for a model that can't see images, which is given the description in the image's place. Not a turn of the conversation.", { describer: r.model });
     return t("{agent} made this call itself ({kind}), not as a turn of the conversation, and picks its model itself.", { agent, kind: kindName(r.kind) });
   }
 
@@ -1718,8 +1718,8 @@
     hist.classList.toggle("solo", none);
     if (none) {
       const p = el("div", "empty-state");
-      p.append(el("b", "", purpose ? t("No requests match these filters.") : day ? t("Nothing on {day}", { day: dayName(day) }) : t("No requests since magpie started")),
-        t("Each request an agent sends through magpie shows up here: who answered it, why, and each try."));
+      p.append(el("b", "", purpose ? t("No requests match these filters.") : day ? t("Nothing on {day}", { day: dayName(day) }) : t("No requests since Echo started")),
+        t("Each request an agent sends through Echo shows up here: who answered it, why, and each try."));
       if (!day && days.length) p.append(" " + t("Earlier ones are kept by day, in the bar above."));
       reqs.replaceChildren(p);
       reqRows.clear();
@@ -1776,8 +1776,8 @@
     // the reasoning the model was sent at — the turn's pick, or the
     // agent's fitted to the model's levels — after the one the agent
     // asked for when that was another (xhigh → max), so a level the
-    // agent didn't pick reads as the agent's or as magpie's at a glance
-    // (呆滞 on X: Pi 里面选择是 xhigh 但是 magpie 里面显示的是 max);
+    // agent didn't pick reads as the agent's or as Echo's at a glance
+    // (呆滞 on X: Pi 里面选择是 xhigh 但是 Echo 里面显示的是 max);
     // how it came to be is in its title and the request's story. Short of
     // room, where it went gives way first, then the level asked for, then
     // the one sent, each cut with an ellipsis in its own box (#435,
@@ -1941,7 +1941,7 @@
 
   const flying = new Map(); // packet → { id: the row it is at, agent }
 
-  // A magpie, drawn to fly: facing right, the dot it carries at the tip
+  // A Echo, drawn to fly: facing right, the dot it carries at the tip
   // of its beak where the flight puts it; its wings beat from the shoulder.
   const FLIER = '<g class="rt-lift"><g transform="scale(1.2) translate(-6.5 3.2)">'
     + '<path class="wing far" d="M-14.5 -3.4C-16.5 -9.5 -14.2 -15 -8.6 -18.6C-9.4 -12.6 -9.6 -7.4 -9.2 -3.2Z"/>'
@@ -1977,10 +1977,10 @@
     return dot;
   }
 
-  // play: one magpie carries the request from the agent through magpie to
+  // play: one Echo carries the request from the agent through Echo to
   // who routing put first, and lets it go there while it answers; another
   // picks up the answer and brings it back — a failure only as far as
-  // magpie, where the first takes the request on to the next.
+  // Echo, where the first takes the request on to the next.
   async function play(id, synced) {
     const routes = src(); // a replay's, if it is one
     let r = routes.get(id);
@@ -1995,14 +1995,14 @@
     const A = agents.get(r.agent);
     const dot = packet();
     dot.style.setProperty("--agent", hueOf(r.agent));
-    // from: where in magpie the dot is, once it is — the way it came in
+    // from: where in Echo the dot is, once it is — the way it came in
     let carrier = bird("req"), from = null, back = null;
     // rt: the route as the gateway has it now — or, dropped from what it
     // keeps, as it was last, over
     const rt = () => routes.get(id) || { ...r, done: true, tries: r.tries.map((x) => ({ ...x, done: true })) };
     try {
       tick(A.node);
-      if (!r.tries.length) { // routing hasn't picked yet: to magpie, to wait there
+      if (!r.tries.length) { // routing hasn't picked yet: to Echo, to wait there
         await fly(dot, carrier, [{ p: A.wire }], 620);
         from = tip(A.wire, true);
         tick(hub);
@@ -2064,7 +2064,7 @@
           tick(A.node);
           break;
         }
-        // back to magpie, which hands the request on to the next
+        // back to Echo, which hands the request on to the next
         await fly(dot, back, [...ws].reverse().map((p) => ({ p, rev: true })), 620);
         flying.delete(dot);
         away(back);
@@ -2082,7 +2082,7 @@
     }
   }
 
-  // home: from an account back through magpie to the agent
+  // home: from an account back through Echo to the agent
   const home = (row, A) => {
     const ws = wiresTo(row);
     return [...[...ws].reverse().map((p) => ({ p, rev: true })), via(tip(ws[0], false, true), tip(A.wire, true, true)), { p: A.wire, rev: true }];
@@ -2247,7 +2247,7 @@
 
   // ---------- the loop ----------
 
-  // pose puts a flight's dot e of the way along, and its magpie with it,
+  // pose puts a flight's dot e of the way along, and its Echo with it,
   // heading the way it flies — turned about to fly left, tilted no more
   // than a bird banks
   function pose(tr, e) {
@@ -2357,7 +2357,7 @@
   function empty() {
     offline("");
     what.replaceChildren(el("b", "", t(purpose || day ? "No requests match these filters." : "Waiting for a request")));
-    mode.textContent = t("Send one from any agent routed through magpie and it plays here as it happens: who routing put first and why, each try, and what each answered.");
+    mode.textContent = t("Send one from any agent routed through Echo and it plays here as it happens: who routing put first and why, each try, and what each answered.");
     for (const a of agents.values()) a.wire.remove();
     agents.clear();
     const a = agentNode("");
@@ -2372,7 +2372,7 @@
     chip.hidden = true;
     hubText();
     list.replaceChildren(el("li", "idle", t(purpose || day ? "No requests match these filters." : "No request yet")));
-    say(t("Every request an agent sends to magpie shows up here, routed for real."));
+    say(t("Every request an agent sends to Echo shows up here, routed for real."));
     log.hidden = true;
     renderHist(); // none live, but the days the history keeps are still there to look at
     layout();
@@ -2391,9 +2391,9 @@
         if (!mine) {
           const gw = providers?.gateway;
           offMsg = !gw?.running ? "The gateway isn't running, so nothing is routed."
-            : gw.window ? "Another magpie serves the gateway; its routing plays live in that magpie's window."
+            : gw.window ? "Another Echo serves the gateway; its routing plays live in that Echo's window."
             // magpie serve: its routing isn't shown anywhere
-            : "The gateway is served by a magpie without a window (magpie serve), so its routing can't be watched. Stop it and let this magpie serve the gateway to see routing live.";
+            : "The gateway is served by an Echo without a window (magpie serve), so its routing can't be watched. Stop it and let this Echo serve the gateway to see routing live.";
           offline(pinned ? "" : t(offMsg));
           loaded = false;
           renderPanel();
@@ -2464,18 +2464,18 @@
   }
   new MutationObserver(words).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
   // a count follows Settings' number units, the panel's "today" with it
-  document.addEventListener("magpie-costs-changed", () => { steady(renderHist); renderPanel(); });
+  document.addEventListener("Echo-costs-changed", () => { steady(renderHist); renderPanel(); });
 
   // ---------- routing groups ----------
   // The groups agents can pick as one model (group/<id>): the user's, and
-  // those magpie found — one model several providers serve. Each is made,
-  // changed or removed here; changing one magpie found makes it the user's.
+  // those Echo found — one model several providers serve. Each is made,
+  // changed or removed here; changing one Echo found makes it the user's.
   // Below them, each provider with several keys or accounts on, which
   // routes over them already: how, and how long a conversation stays.
   const gsec = el("div", "rt-gsec");
   const gHead = el("div", "row-head"), gList = el("div", "list rt-groups");
   const pHead = el("div", "row-head"), pList = el("div", "list rt-pools");
-  // whether magpie finds groups on its own, by the list it fills (蓝猫 on
+  // whether Echo finds groups on its own, by the list it fills (蓝猫 on
   // Discord: they could only be removed one at a time)
   const gFound = el("div", "rt-gfound");
   // how the agents' lists name every group, one setting for them all (and
@@ -2496,7 +2496,7 @@
   const SINK_OPTS = [["", "Keeps its place"], ["sink", "Goes to the back"]];
   const SINK_HINT = {
     "": "One rate limited while it still has quota rests as long as the vendor asks, then takes its place in the order again.",
-    sink: "One rate limited (429) while it still has quota goes to the back of the order, behind every one not rate limited since, and comes round again once those ahead of it are rate limited in turn — so the load goes round rather than back to the first each time. Out of quota, it rests as usual. Kept until magpie restarts.",
+    sink: "One rate limited (429) while it still has quota goes to the back of the order, behind every one not rate limited since, and comes round again once those ahead of it are rate limited in turn — so the load goes round rather than back to the first each time. Out of quota, it rests as usual. Kept until Echo restarts.",
   };
   // in turn goes round already, and a manual group sends to one member
   // how long a group's member may take to its first token (provider.Group.FirstToken)
@@ -2513,7 +2513,7 @@
     order: "In order: the first model until it can't answer, then the next — each over its own accounts or keys as its provider routes them.",
     rotate: "In turn: each conversation's next turn goes to the next member's account or key, spreading the load.",
     usage: "Least used first: the account or key with the most of its allowance left goes first.",
-    pace: "Weekly pace: the account with the most of its week left per hour until it renews goes first, so less of each member's week is lost at its reset — an account with five hours and no week (Claude Enterprise) by what its five hours have left per hour until they renew, so almost always first; a key by the tokens magpie sent it lately.",
+    pace: "Weekly pace: the account with the most of its week left per hour until it renews goes first, so less of each member's week is lost at its reset — an account with five hours and no week (Claude Enterprise) by what its five hours have left per hour until they renew, so almost always first; a key by the tokens Echo sent it lately.",
     manual: "Manual: every request goes to the model you pick on the group's card, over its own accounts or keys; the others, and the rules, wait until you pick another — none takes over when it fails.",
   };
   // a group in the group is routed by its own routing, whatever this one's
@@ -2688,7 +2688,7 @@
     if (!rows.length) rows.push(el("div", "none rt-gnone", groups.found === false
       ? t("No group yet. New group makes one of any models you like.")
       : t("No group yet. A model two of your providers serve becomes one on its own; New group makes one of any models you like.")));
-    // the found groups removed stay removed, magpie doesn't make them
+    // the found groups removed stay removed, Echo doesn't make them
     // again: not listed, one line under the list says how many, and its
     // menu brings one back. With found groups off, none would be anyway.
     if (hidden.length && groups.found !== false) {
@@ -2697,7 +2697,7 @@
       b.type = "button";
       b.setAttribute("aria-haspopup", "menu");
       b.append(el("span", "", t(hidden.length === 1 ? "1 found group removed" : "{n} found groups removed", { n: hidden.length })), svg(CHEV, 11, 1.6));
-      b.title = t("magpie doesn't make them again. Click to bring one back.");
+      b.title = t("Echo doesn't make them again. Click to bring one back.");
       b.onclick = (e) => {
         e.stopPropagation();
         const again = agentMenu?.anchor === b;
@@ -2777,12 +2777,12 @@
     ics.append(stackIcon(groupIcons(g)));
     const main = el("div", "main"), nm = el("div", "nm");
     nm.append(el("b", "", g.name), el("code", "mdl", "group/" + g.id));
-    if (g.auto) nm.append(el("small", "auto", t("found by magpie")));
+    if (g.auto) nm.append(el("small", "auto", t("found by Echo")));
     main.append(nm, el("div", "mem", g.members.map((id) => memberLabel(g, id)).join(g.routing === "order" ? " → " : " · ")));
     row.append(cb, ics, main);
     return row;
   }
-  // drawFound: the switch for the groups magpie finds on its own — a
+  // drawFound: the switch for the groups Echo finds on its own — a
   // model two or more providers serve, as auto-<model> — all at once.
   // Off, none is listed or served: the groups the user made or changed
   // stay, and an agent set to a found one is moved to its model from one
@@ -2831,7 +2831,7 @@
     const main = el("div", "main");
     const nm = el("div", "nm");
     nm.append(el("b", "", g.name), el("code", "mdl", "group/" + g.id));
-    if (g.auto) nm.append(el("small", "auto", t("found by magpie")));
+    if (g.auto) nm.append(el("small", "auto", t("found by Echo")));
     const manual = g.routing === "manual";
     const sep = g.routing === "order" ? " → " : " · ";
     const mem = manual ? pickRow(g) : el("div", "mem", g.members.map((id) => memberLabel(g, id) + (g.off?.includes(id) ? ` (${t("off")})` : "")).join(sep));
@@ -2839,7 +2839,7 @@
     for (const p of g.patterns || []) {
       const line = el("div", "mem pat" + (p.models ? "" : " none"));
       line.append(el("code", "", p.pattern), document.createTextNode(" · " + patternWords(p.models)));
-      line.title = p.models ? t("Every model this pattern matches is in the group, as providers list them") : t("No model magpie serves matches this pattern now");
+      line.title = p.models ? t("Every model this pattern matches is in the group, as providers list them") : t("No model Echo serves matches this pattern now");
       main.append(line);
     }
     const m = GROUP_ROUTE_OPTS.find(([id]) => id === (g.routing || "")) || ROUTE_OPTS[0];
@@ -2866,7 +2866,7 @@
     row.oncontextmenu = (e) => { e.preventDefault(); groupMenu(ics, g); };
     row.append(ics, main, tags, edit);
     // a group of the user's switches off as a whole, kept as it is (PAMI
-    // on Discord); one magpie found is removed rather (provider.SwitchGroup)
+    // on Discord); one Echo found is removed rather (provider.SwitchGroup)
     if (!g.auto) {
       const sw = el("button", "lib-switch rt-gon" + (g.disabled ? "" : " on"));
       sw.type = "button";
@@ -3015,12 +3015,12 @@
     const ed = el("div", "editor rt-gedit");
     const h = el("div", "ehead");
     h.append(el("b", "", g ? g.name : t("New group")));
-    if (g?.auto) h.append(el("span", "note", t("found by magpie — saving a change makes it yours")));
+    if (g?.auto) h.append(el("span", "note", t("found by Echo — saving a change makes it yours")));
     ed.append(h);
     const keys = (i) => { i.onkeydown = (e) => { e.stopPropagation(); if (e.key === "Escape") { cancelGroup(); } else if (e.key === "Enter" && i === name) saveBtn.onclick(); }; return i; };
     const name = keys(input(d.name, t("e.g. Opus anywhere")));
     const idHint = el("div", "hint");
-    // an existing group's id can change (an auto- one found by magpie too);
+    // an existing group's id can change (an auto- one found by Echo too);
     // a new one's is made from its name
     if (g && d.id === undefined) d.id = g.id;
     // an open group folds back into its row from its heading, as it opened
@@ -3157,7 +3157,7 @@
         // that don't had nothing here to tell one from another, and which
         // member a picture would reach was only found out by sending one.
         // A member whose list says nothing of images is marked unknown rather
-        // than text-only: magpie counts it text-only for a describer
+        // than text-only: Echo counts it text-only for a describer
         // (gateway.blindTo), which is not the same as its list saying so.
         if (chips) row.append(modelInfo({ ...chips, group: !!s, images: info?.images ?? chips.images, imagesUnknown: info?.imagesUnknown ?? chips.imagesUnknown }));
         // the reasoning the model is sent at in this group: the group's
@@ -3297,7 +3297,7 @@
       const p = pin.value.trim();
       if (!p) return "";
       if (!isPattern(p)) return status(t("A pattern has a * in it, or starts with re:"), "warn"), null;
-      if (!patternRe(p)) return status(t("{pattern} is not a regular expression magpie can read", { pattern: p }), "warn"), null;
+      if (!patternRe(p)) return status(t("{pattern} is not a regular expression Echo can read", { pattern: p }), "warn"), null;
       if (!d.match.includes(p)) d.match.push(p);
       pin.value = "";
       rematch(); drawPats(); draw(); drawRules();
@@ -3550,14 +3550,14 @@
       cls.replaceChildren(cb,
         ...(sg ? [el("div", "hint", t("A routing group classifies as any request to it goes: if its first model fails, the next is asked."))] : []),
         el("div", "hint", t(isJev(d.classifier) && !intents
-          ? "Jev is asked once as each turn begins, with the message and what it said of the turn before. Its calls show in the usage as magpie’s own."
+          ? "Jev is asked once as each turn begins, with the message and what it said of the turn before. Its calls show in the usage as Echo’s own."
           : isJev(d.classifier)
-          ? "As a turn begins, Jev is asked once which of the intents the message is, and how hard the turn is when it picks the effort. An intent it isn't sure of matches no rule. Its calls show in the usage as magpie’s own."
+          ? "As a turn begins, Jev is asked once which of the intents the message is, and how hard the turn is when it picks the effort. An intent it isn't sure of matches no rule. Its calls show in the usage as Echo’s own."
           : auto && !intents
-          ? "As a turn begins, this model is asked how hard the turn is — once; a small, fast one without reasoning is best. If it fails or can't say, the turn reasons as the agent asked. Its calls show in the usage as magpie’s own."
+          ? "As a turn begins, this model is asked how hard the turn is — once; a small, fast one without reasoning is best. If it fails or can't say, the turn reasons as the agent asked. Its calls show in the usage as Echo’s own."
           : auto
-          ? "As a turn begins, this model is asked which of the intents the message is and how hard the turn is, each once; a small, fast one without reasoning is best. If it can't say, no intent matches and the turn reasons as the agent asked. Its calls show in the usage as magpie’s own."
-          : "As a turn begins, this model is asked which of the intents the message is — once; a small, fast one without reasoning is best. If it fails or can't say, no intent matches. Its calls show in the usage as magpie’s own.")));
+          ? "As a turn begins, this model is asked which of the intents the message is and how hard the turn is, each once; a small, fast one without reasoning is best. If it can't say, no intent matches and the turn reasons as the agent asked. Its calls show in the usage as Echo’s own."
+          : "As a turn begins, this model is asked which of the intents the message is — once; a small, fast one without reasoning is best. If it fails or can't say, no intent matches. Its calls show in the usage as Echo’s own.")));
     };
     rbox.append(rlist, rAdd);
     const rw2 = el("div");
@@ -3760,7 +3760,7 @@
   // account it went to, the model that answered (marked when the reply
   // names another), how it ended and when; today's calls and tokens over
   // them, from the Usage page's count, and between the two a small stage:
-  // the agents that asked lately, magpie, and where their requests went,
+  // the agents that asked lately, Echo, and where their requests went,
   // each new request a dot flying there and back. A click opens the
   // window's Routing page on that request; nothing here moves the panel's
   // scroll.
@@ -3776,10 +3776,10 @@
   }
   window.panelRoutingShown = () => { if (pShown() && performance.now() - todayAt > 5e3) loadToday(); pDraw(); };
 
-  // ---- the stage: agents → magpie → providers ----
+  // ---- the stage: agents → Echo → providers ----
   // Three a side at most, each kept where it is while it stays: one that
   // comes takes the place of the one heard of longest ago. A request plays
-  // as a dot in its agent's colour: to magpie, on to the account it was
+  // as a dot in its agent's colour: to Echo, on to the account it was
   // routed to, waiting there while that answers; a try that failed turns
   // red and comes back for the next, and the answer flies home green (red
   // when nobody could answer). Still, with reduced motion or the tab hidden.
@@ -3870,7 +3870,7 @@
     }
     return n;
   }
-  // the wires from each agent into magpie, and out of it to each account
+  // the wires from each agent into Echo, and out of it to each account
   function pLayout() {
     const r = pStage.getBoundingClientRect();
     if (!r.width) return;
@@ -3998,7 +3998,7 @@
     else if (!loaded) for (let i = 0; i < 3; i++) out.push(el("span", "skeleton pr-sk-row"));
     else if (!rs.length) {
       const p = el("div", "pr-none");
-      p.append(el("b", "", t("No request yet")), t("Every request an agent sends to magpie shows up here, routed for real."));
+      p.append(el("b", "", t("No request yet")), t("Every request an agent sends to Echo shows up here, routed for real."));
       out.push(p);
     } else {
       const list = el("div", "pr-list");

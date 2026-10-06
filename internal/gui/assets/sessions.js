@@ -1,6 +1,6 @@
 // Sessions: every session of an agent on this computer, by the folder it
-// ran in, to pick up again or to delete. A delete asks first, in magpie's
-// own dialog, and moves the session's files into magpie's trash; the Trash
+// ran in, to pick up again or to delete. A delete asks first, in Echo's
+// own dialog, and moves the session's files into Echo's trash; the Trash
 // lists them, each with a Restore and a Delete forever, and can be emptied;
 // erasing for good asks in the same dialog, and is only ever done when the
 // reader asks for it. A session written to in the last minute
@@ -210,10 +210,10 @@
       const key = data.sessions.some((s) => s.read_only)
         ? canResume
           ? "Some {agent} sessions are read only and cannot be deleted."
-          : "These {agent} sessions are read only; magpie can list them, but cannot resume or delete them."
+          : "These {agent} sessions are read only; Echo can list them, but cannot resume or delete them."
         : canResume
-          ? "magpie can list {agent}'s sessions and resume them, but not delete them: they aren't kept as files of their own."
-          : "magpie can list {agent}'s sessions, but cannot resume or delete them.";
+          ? "Echo can list {agent}'s sessions and resume them, but not delete them: they aren't kept as files of their own."
+          : "Echo can list {agent}'s sessions, but cannot resume or delete them.";
       box.append(el("p", "usage-note sm-note", t(key, { agent: a.name })));
     }
     const prov = providerBar();
@@ -308,7 +308,7 @@
       names.append(li);
     }
     ed.append(names);
-    ed.append(el("p", "lib-confirm", t("Only the provider each one names is changed, in its files and in Codex's database: its messages, id, title and archive stay as they are. A copy of its files is kept in magpie's trash folder first, and Undo moves them back. A session written to in the last minute is left alone.")));
+    ed.append(el("p", "lib-confirm", t("Only the provider each one names is changed, in its files and in Codex's database: its messages, id, title and archive stay as they are. A copy of its files is kept in Echo's trash folder first, and Undo moves them back. A session written to in the last minute is left alone.")));
     const bar = el("div", "bar");
     go.type = "button";
     go.onclick = async (e) => {
@@ -604,11 +604,11 @@
     if (!parts.length) out.push(el("p", "cx-none", t("Nothing was said here")));
     for (const p of parts) out.push(ledSaid(p));
     if (got.tr?.cut) out.push(el("p", "cx-none", t("There was more than is shown here")));
-    out.push(el("p", "cx-src", t("Read from the agent's session file; magpie keeps no copy")));
+    out.push(el("p", "cx-src", t("Read from the agent's session file; Echo keeps no copy")));
     box.replaceChildren(...out);
   }
 
-  // askDelete asks in magpie's dialog before the sessions go to its trash;
+  // askDelete asks in Echo's dialog before the sessions go to its trash;
   // folder (a cwd, "" for none) when they are every session of one folder
   function askDelete(ids, folder) {
     const byID = new Map((data?.sessions || []).map((s) => [s.id, s]));
@@ -631,7 +631,7 @@
     for (const s of list.slice(0, 5)) names.append(el("li", "", s.title || s.id));
     if (list.length > 5) names.append(el("li", "more", t("+{n} more", { n: list.length - 5 })));
     ed.append(names);
-    ed.append(el("p", "lib-confirm", t("Their files are moved to magpie's trash ({dir}), not erased: Trash puts them back. A session written to in the last minute is left alone, as {agent} may still be running it.", { dir: data.trashDir, agent: a.name })));
+    ed.append(el("p", "lib-confirm", t("Their files are moved to Echo's trash ({dir}), not erased: Trash puts them back. A session written to in the last minute is left alone, as {agent} may still be running it.", { dir: data.trashDir, agent: a.name })));
     const bar = el("div", "bar");
     const go = el("button", "text primary danger-fill", t("Delete"));
     go.type = "button";
@@ -656,7 +656,7 @@
         status(active.length ? t(active.length === 1 ? "{title} is still being written to; close it in {agent} and try again in a minute" : "{n} sessions are still being written to; close them in {agent} and try again in a minute", { title: s?.title || first.id, n: active.length, agent: a.name })
           : (s?.title || first.id) + ": " + first.error, "err");
       } else {
-        status(t(out.deleted.length === 1 ? "Moved to magpie's trash" : "{n} sessions moved to magpie's trash", { n: out.deleted.length }), "ok");
+        status(t(out.deleted.length === 1 ? "Moved to Echo's trash" : "{n} sessions moved to Echo's trash", { n: out.deleted.length }), "ok");
       }
       await load();
     };
@@ -671,19 +671,19 @@
     cancel.focus({ preventScroll: true });
   }
 
-  // askPurge asks in magpie's dialog before trashed sessions are erased for
+  // askPurge asks in Echo's dialog before trashed sessions are erased for
   // good: the ones listed, or the whole trash (all)
   function askPurge(list, all) {
     if (!list.length) return;
     const ed = el("div", "editor sm-ask sm-ask-purge");
     const h = el("div", "ehead");
-    h.append(svg(TRASH, 15, 1.4), el("b", "", all ? t("Empty magpie's trash?") : t("Delete this session forever?")));
+    h.append(svg(TRASH, 15, 1.4), el("b", "", all ? t("Empty Echo's trash?") : t("Delete this session forever?")));
     ed.append(h);
     const names = el("ul", "sm-ask-list");
     for (const x of list.slice(0, 5)) names.append(el("li", "", x.title || x.id));
     if (list.length > 5) names.append(el("li", "more", t("+{n} more", { n: list.length - 5 })));
     ed.append(names);
-    ed.append(el("p", "lib-confirm", all ? t("Every session in magpie's trash is erased for good: it can't be restored.") : t("Its files are erased for good: it can't be restored.")));
+    ed.append(el("p", "lib-confirm", all ? t("Every session in Echo's trash is erased for good: it can't be restored.") : t("Its files are erased for good: it can't be restored.")));
     const bar = el("div", "bar");
     const go = el("button", "text primary danger-fill", all ? t("Empty trash") : t("Delete forever"));
     go.type = "button";
@@ -734,7 +734,7 @@
     }
     if (!items.length) {
       const e = el("div", "empty-state");
-      e.append(el("b", "", t("Trash is empty")), el("span", "", t("Sessions deleted here wait in magpie's trash, to be restored.")));
+      e.append(el("b", "", t("Trash is empty")), el("span", "", t("Sessions deleted here wait in Echo's trash, to be restored.")));
       out.push(e);
     } else {
       const l = el("div", "list sm-group sm-trash");
@@ -774,7 +774,7 @@
       }
       out.push(l);
     }
-    out.push(el("p", "usage-note", t("Deleted sessions are kept in {dir} until you erase them here; magpie never erases them by itself.", { dir: data.trashDir })));
+    out.push(el("p", "usage-note", t("Deleted sessions are kept in {dir} until you erase them here; Echo never erases them by itself.", { dir: data.trashDir })));
     return out;
   }
 })();

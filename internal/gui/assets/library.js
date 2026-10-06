@@ -1,8 +1,8 @@
 // Library: one set of instructions, MCP servers and skills, written into
-// every agent that should have them (#29). magpie keeps the library in its
+// every agent that should have them (#29). Echo keeps the library in its
 // own folder and writes each agent's files from it; what the user has in
 // those files besides stays theirs, and every file is kept aside before
-// magpie writes it. Everything shown here comes from /api/library.
+// Echo writes it. Everything shown here comes from /api/library.
 (() => {
   const page = $("#view-library");
   if (!page) return;
@@ -247,7 +247,7 @@
       c.setAttribute("aria-pressed", has ? "true" : "false");
       // What's lit is read off the chips clicked, not the list they were
       // drawn with: a row's chips change in place, several clicks before
-      // magpie has answered the first, and take on the handlers of chips
+      // Echo has answered the first, and take on the handlers of chips
       // drawn for them (morphChips). An agent not shown keeps what it has.
       c.onclick = (e) => {
         e.stopPropagation();
@@ -314,7 +314,7 @@
   // the pointer) and blinked their icons (#69). The chip shows the click at
   // once and the next click needn't wait: a row writes one list at a time,
   // and clicks made meanwhile are sent together once it's answered, so the
-  // last click is what the agents end up with. What magpie wrote is then
+  // last click is what the agents end up with. What Echo wrote is then
   // painted onto the same buttons — or, when it couldn't, what it has, which
   // takes back the clicks it refused. Nothing else on the page is drawn
   // again for it: the rest is drawn from the new answer when the page next is.
@@ -355,7 +355,7 @@
       }
       writing.delete(key);
       syncProblems();
-      // the page held the clicks: what magpie really has is read again
+      // the page held the clicks: what Echo really has is read again
       if (failed) await api("library").then(take, () => {});
       const x = lib[list].find((y) => y.name === name);
       const fresh = x && rowOf(x).querySelector(":scope > .lib-agents");
@@ -379,7 +379,7 @@
       + t("{agent}: {error}", { agent: nameOf(p.agent), error: p.error }) + (bad.length > 1 ? " " + t("(and {n} more)", { n: bad.length - 1 }) : ""), "warn", 8000);
   }
 
-  // take is the page as magpie answered it, with the rows still being
+  // take is the page as Echo answered it, with the rows still being
   // written kept as they were last clicked. A server or skill added,
   // removed or renamed changes what the market calls added (#300): one gone
   // from the library loses its mark at once, and the market is asked again.
@@ -639,7 +639,7 @@
     page.append(body);
     for (const n of body.querySelectorAll(".row-head .note")) n.title = n.textContent;
     const foot = el("p", "lib-foot");
-    foot.append(el("span", "", t("magpie keeps a copy of every file before it writes it.") + " "));
+    foot.append(el("span", "", t("Echo keeps a copy of every file before it writes it.") + " "));
     const b = el("button", "lib-link", t("Backups"));
     b.onclick = () => reveal(lib.backups);
     foot.append(b);
@@ -665,7 +665,7 @@
   // ---------- RTK ----------
 
   // RTK (rtk-ai.app) cuts down what the shell commands an agent runs print,
-  // so their output costs fewer tokens. magpie runs rtk's own installer for
+  // so their output costs fewer tokens. Echo runs rtk's own installer for
   // each agent switched on, takes out what it wrote for one switched off
   // (with or without rtk), and reads the agents' files for which have it.
   let rtk = null;          // /api/library/rtk
@@ -683,7 +683,7 @@
     if (tab === "rtk" && rtk) render();
   }
   function renderRTK(body) {
-    body.append(intro(t("RTK rewrites the shell commands an agent runs — git status, cargo test, ls… — to print only what the model needs, so they cost fewer tokens. Switch it on for an agent and magpie runs RTK's own installer for it.")));
+    body.append(intro(t("RTK rewrites the shell commands an agent runs — git status, cargo test, ls… — to print only what the model needs, so they cost fewer tokens. Switch it on for an agent and Echo runs RTK's own installer for it.")));
     if (!rtk) {
       body.append(el("div", "row skeleton"));
       loadRTK();
@@ -707,7 +707,7 @@
       if (behind || rtkUpgrading) {
         const ub = button(rtkUpgrading ? t("Upgrading…") : t("Upgrade"), "action", upgradeRTK);
         ub.disabled = rtkUpgrading || !rtk.upgrade;
-        ub.title = rtk.upgrade ? t("Runs {cmd}", { cmd: rtk.upgrade }) : t("magpie can't tell how this RTK was installed — update it the way you installed it");
+        ub.title = rtk.upgrade ? t("Runs {cmd}", { cmd: rtk.upgrade }) : t("Echo can't tell how this RTK was installed — update it the way you installed it");
         ttl.append(ub);
       }
       card.append(ttl);
@@ -716,7 +716,7 @@
       if (rtkUpgrading && rtk.upgrade) card.append(el("p", "lib-rtk-gain", t("Running {cmd} — this can take a few minutes.", { cmd: rtk.upgrade })));
       else if (rtkUpgradeErr) card.append(el("p", "lib-rtk-note lib-rtk-err", t("The upgrade failed: {why}", { why: rtkUpgradeErr })));
       if (rtk.note) card.append(el("p", "lib-rtk-note", rtk.note));
-      // found where magpie looks, but not on the PATH the agents get: their
+      // found where Echo looks, but not on the PATH the agents get: their
       // hooks run rtk by name, so it does nothing for them (#601)
       if (rtk.offPath) {
         const dir = tilde(rtk.path.replace(/[\\/][^\\/]*$/, ""));
@@ -736,13 +736,13 @@
         card.append(acts);
       }
       // RTK's own count (rtk gain): every agent and terminal, all time —
-      // said on the page, so an empty one isn't read as magpie counting
+      // said on the page, so an empty one isn't read as Echo counting
       // only some (#741); one rtk couldn't give says why
       const g = rtk.gain;
       const gain = el("p", "lib-rtk-gain", g
         ? t("{saved} tokens saved over {n} commands — {pct}% on average", { saved: tokens(g.saved), n: g.commands.toLocaleString(), pct: Math.round(g.pct) })
         : rtk.gainErr
-          ? t("magpie couldn't read what RTK saved: {why}", { why: rtk.gainErr })
+          ? t("Echo couldn't read what RTK saved: {why}", { why: rtk.gainErr })
           : t("Nothing saved yet: the agents' commands go through RTK once it's switched on and the agent is restarted."));
       gain.append(" ", el("span", "lib-rtk-scope", t("RTK's own count (rtk gain): every command run through RTK on this computer, from any agent or terminal.")));
       card.append(gain);
@@ -756,7 +756,7 @@
       card.append(ttl);
       card.append(el("p", "lib-rtk-gain", rtkInstalling
         ? t("Installing RTK… this can take a minute.")
-        : t("RTK isn't installed. magpie can install it for you, or get it from its site.")));
+        : t("RTK isn't installed. Echo can install it for you, or get it from its site.")));
       if (rtk.install) card.append(el("p", "lib-rtk-cmd", rtk.install));
       const acts = el("div", "lib-acts");
       if (rtk.install) {
@@ -1006,13 +1006,13 @@
     const inUse = (iv.sets || []).find((x) => x.active) || (iv.sets || [])[0];
     rh.append(el("span", "label", t("Agents")));
     if (inUse) rh.append(el("span", "note lib-reads", t("They read {name}", { name: setName(inUse) }) + ((inUse.text || "").trim() ? "" : " · " + t("Empty"))));
-    rh.append(el("span", "grow"), el("span", "note", t("magpie writes its part between two marker lines — the rest of each file stays yours")));
+    rh.append(el("span", "grow"), el("span", "note", t("Echo writes its part between two marker lines — the rest of each file stays yours")));
     body.append(rh);
     const list = el("div", "list lib-list");
     // a hidden agent still reading them is listed, to switch it off (#475)
     const rows = iv.agents.filter((a) => !isHidden({ id: a.agent }) || a.on);
     for (const a of rows) list.append(...instructionsRow(a));
-    if (!rows.length) list.append(el("div", "lib-none", t("None of your agents reads a user-wide instructions file magpie knows.")));
+    if (!rows.length) list.append(el("div", "lib-none", t("None of your agents reads a user-wide instructions file Echo knows.")));
     body.append(list);
     const skip = shownAgents().filter((a) => !a.instructions);
     if (skip.length) body.append(el("p", "lib-aside", t(skip.length > 1 ? "{agents} keep no user-wide instructions file." : "{agents} keeps no user-wide instructions file.", { agents: skip.map((a) => a.name).join(", ") })));
@@ -1128,8 +1128,8 @@
     const extra = extras[a.agent] ?? a.extra;
     if (isHidden({ id: a.agent })) tags.append(tag(t("Hidden"), "", t("Hidden on the Agents page: switch it off here to take the shared instructions out of its file")));
     if (a.on && extra) tags.append(tag(t("+ its own"), "", t("{agent} gets something of its own after the shared text", { agent: a.name })));
-    if (a.edited) tags.append(tag(t("edited in the file"), "warn", t("magpie's part of this file was changed there; magpie leaves it until the library's text changes")));
-    if (a.own) tags.append(tag(a.own === 1 ? t("1 line of its own") : t("{n} lines of its own", { n: a.own }), "", t("The file has instructions besides magpie's part — they stay, and the agent reads both")));
+    if (a.edited) tags.append(tag(t("edited in the file"), "warn", t("Echo's part of this file was changed there; Echo leaves it until the library's text changes")));
+    if (a.own) tags.append(tag(a.own === 1 ? t("1 line of its own") : t("{n} lines of its own", { n: a.own }), "", t("The file has instructions besides Echo's part — they stay, and the agent reads both")));
     const chev = el("span", "chev");
     chev.append(svg(CHEV_R, 11, 1.7));
     row.append(icon(a.icon), who, tags, toggle(a.on, t("{agent} reads the shared instructions", { agent: a.name }), (on) => {
@@ -1175,7 +1175,7 @@
     }
     if (a.edited) {
       const b = button(t("Write the library's text again"), "action", () => change("instructions/save", { rewrite: [a.agent] }, t("{agent}'s file has the library's text again", { agent: a.name })));
-      b.title = t("Replaces what was changed in magpie's part of the file; the file is kept aside first");
+      b.title = t("Replaces what was changed in Echo's part of the file; the file is kept aside first");
       acts.append(b);
     }
     if (acts.childElementCount) det.append(acts);
@@ -1213,7 +1213,7 @@
   const reaches = (s) => (a) => !a || (!(remote(s) && a.noRemote) && !(s.transport === "sse" && a.noSSE));
 
   function renderServers(body) {
-    body.append(intro(t("Add a server once and switch it on for the agents that should have it — magpie writes it into each one's config in the shape that agent reads.")));
+    body.append(intro(t("Add a server once and switch it on for the agents that should have it — Echo writes it into each one's config in the shape that agent reads.")));
     const all = mcpAgents();
     if (!lib.servers.length) {
       const add = button(t("＋ Add a server"), "action", () => editServer(null));
@@ -1244,7 +1244,7 @@
       queueMicrotask(() => checkHealth(unchecked));
     }
     // an agent's own servers (Codex's node_repl, added each time it starts)
-    // aren't listed: magpie leaves them as they are
+    // aren't listed: Echo leaves them as they are
     const found = lib.foundServers.filter((f) => !f.own);
     if (found.length) {
       const rh = el("div", "row-head");
@@ -1256,7 +1256,7 @@
     }
     if (lib.servers.length || lib.projects.length) renderProjects(body, "mcp");
     const skip = shownAgents().filter((a) => !a.mcp);
-    if (skip.length) body.append(el("p", "lib-aside", t("{agents} has no MCP servers magpie can write.", { agents: skip.map((a) => a.name).join(", ") })));
+    if (skip.length) body.append(el("p", "lib-aside", t("{agents} has no MCP servers Echo can write.", { agents: skip.map((a) => a.name).join(", ") })));
     body.append(discover("mcp"));
   }
 
@@ -1265,7 +1265,7 @@
     const who = el("div", "who");
     const nm = el("div", "name mono", s.name);
     if (s.signIn?.dead) nm.append(tag(t("Sign-in ran out"), "warn", t("Open it to sign in again")));
-    else if (s.signIn?.signedIn) nm.append(tag(t("Signed in"), "lib-signed", t("The agents given it use magpie's sign-in")));
+    else if (s.signIn?.signedIn) nm.append(tag(t("Signed in"), "lib-signed", t("The agents given it use Echo's sign-in")));
     // its status beside the name, not in it: the name is still the name
     who.classList.add("lib-srvwho");
     who.append(nm, healthEl(s.name));
@@ -1279,7 +1279,7 @@
     return row;
   }
 
-  // Whether a server works, as magpie found by connecting to it: started
+  // Whether a server works, as Echo found by connecting to it: started
   // (or reached) and asked for its tools. Its row shows it as a dot and a
   // few words, the whole reason in its tooltip; a click checks it again.
   const health = new Map(); // name → { key: the server as checked, h: what was found, null while checking }
@@ -1314,13 +1314,13 @@
     if (h.state === "ok") return [h.tools === 1 ? t("1 tool") : t("{n} tools", { n: h.tools }), t("It started and listed its tools")];
     if (h.state === "auth") {
       const why = h.oauth
-        ? (s?.transport === "http" ? t("The server asks for a sign-in — open it to sign in once in magpie") : t("The server asks for a sign-in"))
-        : t("The server refused magpie (HTTP {code}) — a key in its headers may be missing or wrong", { code: h.code || 401 });
+        ? (s?.transport === "http" ? t("The server asks for a sign-in — open it to sign in once in Echo") : t("The server asks for a sign-in"))
+        : t("The server refused Echo (HTTP {code}) — a key in its headers may be missing or wrong", { code: h.code || 401 });
       return [t("needs sign-in"), h.detail ? why + "\n" + h.detail : why];
     }
     const more = (x) => (h.detail ? x + "\n" + h.detail : x);
     switch (h.why) {
-      case "notfound": return [t("can't start: {cmd} not found", { cmd: h.detail }), t("Can't start it: there is no {cmd} on the PATH magpie has", { cmd: h.detail })];
+      case "notfound": return [t("can't start: {cmd} not found", { cmd: h.detail }), t("Can't start it: there is no {cmd} on the PATH Echo has", { cmd: h.detail })];
       case "start": return [t("can't start"), more(t("Can't start it"))];
       case "exited": return [h.code ? t("exited ({code})", { code: h.code }) : t("exited"), more(h.code ? t("It exited with code {code} before listing its tools", { code: h.code }) : t("It exited before listing its tools"))];
       case "timeout": return [t("no answer"), more(t("No answer in 15 seconds"))];
@@ -1328,7 +1328,7 @@
       case "refused": return [t("connection refused"), more(t("Nothing is listening at that address"))];
       case "unreachable": return [t("can't reach"), more(t("Can't reach the server"))];
       case "protocol": return [t("bad reply"), more(t("It answered, but not as an MCP server does"))];
-      default: return [t("couldn't check"), more(t("magpie couldn't check it"))];
+      default: return [t("couldn't check"), more(t("Echo couldn't check it"))];
     }
   }
   // paintHealth fills a row's status in place, by the button or the
@@ -1352,8 +1352,8 @@
     }
   }
 
-  // magpie's sign-in to a remote server (#615): signed in once here, and
-  // every agent given the server reaches it through magpie, with it
+  // Echo's sign-in to a remote server (#615): signed in once here, and
+  // every agent given the server reaches it through Echo, with it
   let mcpSigning = null; // { name, id, state, error } while one is under way
   // name is the server as saved ("" for one being added); ready saves what
   // the editor shows when it isn't that (a URL changed to the one that
@@ -1374,7 +1374,7 @@
             draw();
           }));
       } else if (cur.signedIn && !cur.dead) {
-        line.append(tag(t("Signed in"), "lib-signed"), el("span", "note", t("The agents given it use magpie's sign-in")), el("span", "grow"), button(t("Sign out"), "", signOut));
+        line.append(tag(t("Signed in"), "lib-signed"), el("span", "note", t("The agents given it use Echo's sign-in")), el("span", "grow"), button(t("Sign out"), "", signOut));
       } else {
         if (cur.dead) line.append(tag(t("Sign-in ran out"), "warn"));
         line.append(button(cur.dead ? t("Sign in again") : t("Sign in"), "action", start));
@@ -1401,7 +1401,7 @@
         follow(st.id);
       } catch (e) {
         if (!mcpSigning) return; // canceled
-        // magpie's words in the reader's language, where it has them
+        // Echo's words in the reader's language, where it has them
         mcpSigning = { name, state: "failed", error: t(e.message) };
         draw();
       }
@@ -1417,7 +1417,7 @@
         if (st.state === "done") {
           mcpSigning = null;
           await api("library").then(take, () => {});
-          status(t("Signed in to {name} — the agents given it use magpie's sign-in", { name }), "ok");
+          status(t("Signed in to {name} — the agents given it use Echo's sign-in", { name }), "ok");
           render();
         } else mcpSigning = st.state === "canceled" ? null : { ...st, name };
         draw();
@@ -1584,7 +1584,7 @@
         g.append(...field(t("Headers"), pairs(d.headers, "Authorization", "Bearer …", (v) => { d.headers = v; })));
         // Sign in saves the form first when it isn't what's saved, so a URL
         // just changed (or a server just added) is the one signed in to
-        if (d.transport === "http") g.append(...field(t("Sign-in"), signInBox(s ? s.name : "", ready), t("For a server that asks you to sign in (OAuth): magpie signs in once, and every agent given it uses that sign-in")));
+        if (d.transport === "http") g.append(...field(t("Sign-in"), signInBox(s ? s.name : "", ready), t("For a server that asks you to sign in (OAuth): Echo signs in once, and every agent given it uses that sign-in")));
       }
       slot.append(g);
       // its own icon while it runs as it did; another way of running is another server
@@ -1818,7 +1818,7 @@
   try { folds = JSON.parse(localStorage.getItem("magpie.libSkillFolds") || "{}") || {}; } catch {}
   function saveFolds() { try { localStorage.setItem("magpie.libSkillFolds", JSON.stringify(folds)); } catch {} }
   const repoOf = (u) => (u || "").replace(/^https:\/\/github\.com\//, "").split("/").slice(0, 2).join("/");
-  // the repository a skill came from, however it came in: magpie traces
+  // the repository a skill came from, however it came in: Echo traces
   // one not installed from GitHub too (the skills CLI's lock, the git
   // checkout it's in), so a repository's skills are one group (White
   // Immortal on Discord). owner/repo on GitHub, host/path elsewhere.
@@ -1834,7 +1834,7 @@
   // skill by name, A→Z or Z→A (#481)
   const SKILL_SORTS = () => [["source", t("By source")], ...NAME_SORTS];
   // the groups, and each skill's text to filter by, worked out once for
-  // each answer from magpie and each pick
+  // each answer from Echo and each pick
   let grouped = null;
   function skillGroups() {
     const pick = sortOf("libSkills", SKILL_SORTS());
@@ -2029,7 +2029,7 @@
     return head;
   }
 
-  // the skill as magpie last said, for a row drawn after the list was:
+  // the skill as Echo last said, for a row drawn after the list was:
   // a row scrolled away and back is drawn from what the page has now
   let named = null;
   function skillNamed(name) {
@@ -2474,7 +2474,7 @@
   // A project is a folder of the user's whose agents get some of the
   // library's skills there, as the project's own: linked (or copied) into
   // the folder each agent reads a project's skills from, and kept out of
-  // git in the project's .gitignore. Only what magpie placed is taken away.
+  // git in the project's .gitignore. Only what Echo placed is taken away.
   // Its MCP servers are written into the file each agent reads a project's
   // servers from (.mcp.json, .codex/config.toml…), beside what's there; the
   // MCP tab lists the same projects with the servers.
@@ -2494,8 +2494,8 @@
     if (addingProject) body.append(addProjectCard(kind));
     if (!lib.projects.length && !addingProject) {
       body.append(el("p", "lib-aside", kind === "mcp"
-        ? t("Give a project's agents some of these servers as the project's own: magpie writes them into its {files}, leaving the rest of each file as it is.", { files: projectFiles() })
-        : t("Give a project's agents some of these skills as the project's own: magpie links them into its .claude/skills and .agents/skills and keeps them out of git.")));
+        ? t("Give a project's agents some of these servers as the project's own: Echo writes them into its {files}, leaving the rest of each file as it is.", { files: projectFiles() })
+        : t("Give a project's agents some of these skills as the project's own: Echo links them into its .claude/skills and .agents/skills and keeps them out of git.")));
       return;
     }
     for (const p of lib.projects) body.append(projectCard(p, kind));
@@ -2617,13 +2617,13 @@
       card.append(row);
     }
     const dirs = [...new Set(all.map((a) => a.projectSkills))];
-    card.append(el("p", "lib-aside lib-projfoot", t("Placed in {dirs} of the project and listed in its .gitignore. A folder there that isn't magpie's is left as it is.", { dirs: dirs.join(", ") })));
+    card.append(el("p", "lib-aside lib-projfoot", t("Placed in {dirs} of the project and listed in its .gitignore. A folder there that isn't Echo's is left as it is.", { dirs: dirs.join(", ") })));
     const skip = shownAgents().filter((a) => a.skills && !a.projectSkills);
-    if (skip.length) card.append(el("p", "lib-aside lib-projfoot", t("{agents} reads no project skills folder magpie knows of.", { agents: skip.map((a) => a.name).join(", ") })));
+    if (skip.length) card.append(el("p", "lib-aside lib-projfoot", t("{agents} reads no project skills folder Echo knows of.", { agents: skip.map((a) => a.name).join(", ") })));
     return card;
   }
 
-  // A project row's chip: lit at once, so a second click before magpie has
+  // A project row's chip: lit at once, so a second click before Echo has
   // answered the first counts from it; the clicks are sent one at a time,
   // the last of them winning, and the page drawn again once they're in.
   const projectWriting = new Map();
@@ -2676,10 +2676,10 @@
       card.append(row);
     }
     if (!lib.servers.length) card.append(el("p", "lib-aside lib-projfoot", t("No servers in the library yet")));
-    card.append(el("p", "lib-aside lib-projfoot", t("Written into {files} of the project, beside what's in them; a file magpie makes is listed in its .gitignore. A server there by the same name that isn't magpie's is left as it is.", { files: projectFiles() })));
+    card.append(el("p", "lib-aside lib-projfoot", t("Written into {files} of the project, beside what's in them; a file Echo makes is listed in its .gitignore. A server there by the same name that isn't Echo's is left as it is.", { files: projectFiles() })));
     card.append(el("p", "lib-aside lib-projfoot", t("Claude Code asks before it starts a project's servers; Codex reads .codex/config.toml, and Pi .pi/mcp.json, only in a project you trust.")));
     const skip = shownAgents().filter((a) => a.mcp && !a.projectMCP);
-    if (skip.length) card.append(el("p", "lib-aside lib-projfoot", t("{agents} reads no project MCP file magpie knows of.", { agents: skip.map((a) => a.name).join(", ") })));
+    if (skip.length) card.append(el("p", "lib-aside lib-projfoot", t("{agents} reads no project MCP file Echo knows of.", { agents: skip.map((a) => a.name).join(", ") })));
     return card;
   }
 
@@ -2691,20 +2691,20 @@
     const say = el("p", "lib-confirm");
     ed.append(say);
     // #514: skills or servers given to a project once are often to stay
-    // there; magpie can forget the project and leave them as they are
+    // there; Echo can forget the project and leave them as they are
     const has = p.placed?.length || Object.values(p.wrote || {}).some((x) => x.length);
     const keep = el("input");
     keep.type = "checkbox";
     const tell = () => {
       say.textContent = keep.checked
-        ? t("magpie forgets the project. The skills and MCP servers it put in the folder stay there as they are, with their lines in its .gitignore, and are yours from then on; a linked skill still follows the library's.")
-        : t("The skills and MCP servers magpie put in it are taken away, with their lines in its .gitignore. Nothing else in the folder is touched.");
+        ? t("Echo forgets the project. The skills and MCP servers it put in the folder stay there as they are, with their lines in its .gitignore, and are yours from then on; a linked skill still follows the library's.")
+        : t("The skills and MCP servers Echo put in it are taken away, with their lines in its .gitignore. Nothing else in the folder is touched.");
     };
     keep.onchange = tell;
     if (has) {
       const r = el("label", "lib-pick lib-keep");
       const w = el("span", "who");
-      w.append(el("span", "name", t("Keep its skills and MCP servers")), el("span", "sub", t("Remove the project from magpie only, leaving what magpie wrote into it")));
+      w.append(el("span", "name", t("Keep its skills and MCP servers")), el("span", "sub", t("Remove the project from Echo only, leaving what Echo wrote into it")));
       r.append(keep, w);
       ed.append(r);
     }
@@ -2947,7 +2947,7 @@
   }
 
   // Every skill out of the library at once (#449), each as a row's Remove
-  // takes it: out of every agent and project, its folder moved to magpie's
+  // takes it: out of every agent and project, its folder moved to Echo's
   // backups, or for one linked from a folder of the user's only the link
   // taken away. It asks first, in the page, saying who loses what.
   function removeEverySkillButton() {
@@ -2968,9 +2968,9 @@
     ed.append(el("p", "lib-confirm", agents.length
       ? t("They are taken out of the library and out of {agents}.", { agents: agents.map(nameOf).join(", ") })
       : t("They are taken out of the library; no agent has any of them.")));
-    if (projects) ed.append(el("p", "lib-confirm", t("The skills magpie placed in {n} projects are taken away too.", { n: projects })));
+    if (projects) ed.append(el("p", "lib-confirm", t("The skills Echo placed in {n} projects are taken away too.", { n: projects })));
     const where = [];
-    if (kept) where.push(t("{n} folders are moved to magpie's backups (Backups, at the foot of the Library), not deleted.", { n: kept }));
+    if (kept) where.push(t("{n} folders are moved to Echo's backups (Backups, at the foot of the Library), not deleted.", { n: kept }));
     if (linked) where.push(t("{n} linked from folders of your own are only unlinked: those folders stay where they are.", { n: linked }));
     ed.append(el("p", "lib-confirm", where.join(" ")));
     const bar = el("div", "bar");
@@ -3242,7 +3242,7 @@
     ed.append(head);
     ed.append(el("p", "lib-confirm", s.kind === "folder"
       ? t("It is taken out of every agent it was given to. The folder it was linked from stays where it is.")
-      : t("It is taken out of every agent it was given to, and its folder is moved to magpie's backups.")));
+      : t("It is taken out of every agent it was given to, and its folder is moved to Echo's backups.")));
     const bar = el("div", "bar");
     const go = button(t("Remove"), "primary danger-fill", async () => { if (await change("skills/remove", { name: s.name }, t("{name} removed", { name: s.name }))) closeLibModal(true); });
     bar.append(el("span", "grow"), button(t("Cancel"), "", closeLibModal), go);
@@ -3434,7 +3434,7 @@
     return box;
   }
 
-  // A real picture: the project's own logo or its owner's, through magpie so
+  // A real picture: the project's own logo or its owner's, through Echo so
   // it's cached; its initial on a tile when there's none.
   function logo(url, name) {
     const box = el("span", "mk-icon");
@@ -3463,7 +3463,7 @@
     return x.runs || t("Local");
   }
   const needsKey = (x) => x.inputs?.some((i) => i.required);
-  // the featured servers' words are magpie's own, so they're translated
+  // the featured servers' words are Echo's own, so they're translated
   const about = (x) => (x.featured ? t(x.description) : x.description) || "";
 
   function addButton(x, onAdd) {
@@ -3518,7 +3518,7 @@
   // A market server up close: what it is, what it needs, and who gets it.
   function serverSheet(x) {
     const all = mcpAgents();
-    // an opt-in one (magpie's image generation costs what its model does)
+    // an opt-in one (Echo's image generation costs what its model does)
     // goes only to the agents picked for it
     let agents = x.optIn ? [] : all.filter(reaches(x)).map((a) => a.id);
     const values = {};

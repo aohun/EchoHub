@@ -1,6 +1,6 @@
 // Run with Node's test runner and Playwright on the module path; see README.md.
 // The agents' CLIs on the Agents page (#202): each row's version after its
-// name, an "Update to x.y.z" pill where a newer one is out and magpie knows
+// name, an "Update to x.y.z" pill where a newer one is out and Echo knows
 // how the CLI was installed, the version alone where it doesn't; the rows
 // keep their height; a click updates in place (busy, then the new version,
 // the pill gone) with the view left where it was; a failed update says why
@@ -27,7 +27,7 @@ const state = {
 const CLIS = {
   codex: { version: "0.155.1", latest: "0.159.0", via: "self", command: "codex update", update: true },
   gemini: { version: "0.60.0", latest: "0.61.0", via: "npm", command: "npm install -g --prefix /x @google/gemini-cli@latest", update: true },
-  "agent-0": { version: "1.2.3" }, // installed some way magpie can't tell
+  "agent-0": { version: "1.2.3" }, // installed some way Echo can't tell
   "agent-1": { version: "2.0.0", latest: "2.0.0", via: "brew", command: "brew upgrade agent-1" },
 };
 
@@ -76,12 +76,12 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
       return page;
     };
 
-    await t.test("versions, and a pill only where magpie can update", async () => {
+    await t.test("versions, and a pill only where Echo can update", async () => {
       const page = await open("en", []);
       assert.equal(await page.locator(`${row("codex")} .ag-ver`).textContent(), "0.155.1");
       assert.equal(await page.locator(`${row("codex")} .ag-up`).textContent(), "Update to 0.159.0");
       assert.match(await page.locator(`${row("codex")} .ag-up`).getAttribute("title"), /codex update/);
-      // installed some way magpie can't tell: the version, and nothing to click
+      // installed some way Echo can't tell: the version, and nothing to click
       assert.equal(await page.locator(`${row("agent-0")} .ag-ver`).textContent(), "1.2.3");
       assert.equal(await page.locator(`${row("agent-0")} .ag-up`).count(), 0);
       assert.match(await page.locator(`${row("agent-0")} .ag-ver`).getAttribute("title"), /can't tell how it was installed/);

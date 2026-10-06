@@ -22,7 +22,7 @@ const README = [
   "## Install",
   "",
   "```sh",
-  "magpie plugin add " + FOLDER,
+  "Echo plugin add " + FOLDER,
   "```",
 ].join("\n");
 
@@ -137,7 +137,7 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
     }
 
     // `magpie web` has no picker: no button, and the field is typed into
-    await t.test("no picker where magpie can't show one", async () => {
+    await t.test("no picker where Echo can't show one", async () => {
       const asked = [];
       const page = await (await browser.newContext({ viewport: { width: 980, height: 820 } })).newPage();
       page.setDefaultTimeout(5000);

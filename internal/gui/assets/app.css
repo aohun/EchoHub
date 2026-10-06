@@ -1,4 +1,4 @@
-/* magpie — one quiet surface, real logos, controls that read as pop-up buttons. */
+/* Echo — one quiet surface, real logos, controls that read as pop-up buttons. */
 :root {
   --bg: #f4f4f6;
   --card: #ffffff;
@@ -29,7 +29,7 @@
   --red-soft: #fbe9e9;
   --amber: #b45309;
   --amber-soft: #fbf0df;
-  /* an agent magpie set up that no longer goes through it */
+  /* an agent Echo set up that no longer goes through it */
   --drift: #ce2c31;
   --drift-soft: #feebec;
   --pop-bg: rgba(255, 255, 255, .94);
@@ -169,7 +169,7 @@ body:not(.window.linux) #winclose { display: none; }
    as GNOME draws its close button, and set a little apart from the icons */
 .icon.winclose { align-self: center; width: 22px; height: 22px; margin-left: 8px; border-radius: 50%; background: var(--pill); color: var(--fg-2); }
 .icon.winclose:hover { background: color-mix(in srgb, var(--fg) 12%, transparent); }
-/* the magpie flaps, flicks its tail and bobs when the window opens and on
+/* the Echo flaps, flicks its tail and bobs when the window opens and on
    hover. It moves in pieces cut from the logo, and is drawn whole at rest, so
    the cuts never show. */
 .logo svg { display: block; overflow: visible; }
@@ -228,7 +228,7 @@ body.panel .seg { display: none; }
    ghosts of each frame behind (#16) — and always finishes its turn */
 .icon svg { transform-origin: 50% 50%; backface-visibility: hidden; }
 .icon.spin svg { animation: spin .9s linear infinite; will-change: transform; }
-/* a newer magpie is ready: a quiet pill before the header's icons */
+/* a newer Echo is ready: a quiet pill before the header's icons */
 .update {
   align-self: center; display: inline-flex; align-items: center; gap: 4px;
   height: 22px; margin-right: 6px; padding: 0 9px 0 7px; border-radius: 999px;
@@ -255,7 +255,7 @@ body.panel .seg { display: none; }
 .update-hide:focus-visible { opacity: 1; pointer-events: auto; } /* its own rule: Safari before 15.4 drops a list holding it */
 .update-hide:hover { color: var(--fg); }
 .update[hidden] + .update-hide, .update.busy + .update-hide { display: none; }
-/* a narrow header (fitTop): the magpie without its name, Update as its arrow,
+/* a narrow header (fitTop): the Echo without its name, Update as its arrow,
    the tabs closer together, still in the middle of the window, and only when
    they don't fit there, in the row rather than over it: halfway between what
    is either side of them, not a third of the room their left and two thirds
@@ -271,7 +271,7 @@ body.window .top.inrow .actions { margin-left: 0; }
 /* and when even that doesn't fit, the tabs scroll sideways rather than push the page wider */
 .top.packed .seg { min-width: 0; flex: 0 1 auto; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 .top.packed .seg::-webkit-scrollbar { display: none; }
-/* magpie web on a phone, or a browser as narrow (phoneWeb): the magpie and
+/* magpie web on a phone, or a browser as narrow (phoneWeb): the Echo and
    the icons in a row, the tabs at their size in a row of their own under
    them, sliding sideways when they don't fit (they were squeezed into the
    room between, too small to read or tap) */
@@ -384,7 +384,7 @@ body.panel #agents > .row .ag-handle::before { left: -10px; }
    hidden by hand, and has to be seen to be found (#479) */
 .ag-show:focus-visible { outline: 1.5px solid var(--fg-2); outline-offset: 1px; }
 .ag-show svg { color: var(--muted); }
-/* an agent whose config was rewritten since magpie set it: a line under
+/* an agent whose config was rewritten since Echo set it: a line under
    its name saying so, and the button that sets it again */
 /* a drifted agent: a coral pill on its name's line — the row keeps its
    height and the pickers their columns */
@@ -1589,7 +1589,7 @@ body.window .foot { padding-left: 18px; }
 .pop li.reset .ic { opacity: .75; }
 .pop li.custom .v { color: var(--fg); }
 .pop li.custom .n { color: var(--muted); }
-/* the models on the agent's own account through magpie, folded into one
+/* the models on the agent's own account through Echo, folded into one
    row (#496): a chevron says it opens, turned down while open */
 .pop li.fold .v { color: var(--muted); }
 .pop li.fold .chev { display: inline-flex; margin-left: auto; flex: none; color: var(--faint); transition: transform .18s cubic-bezier(.22, 1, .36, 1); }
@@ -1788,7 +1788,7 @@ body.window .ag-sk-icon { width: 22px; height: 22px; border-radius: 6px; }
 .badge.off { background: var(--pill); color: var(--muted); }
 .badge.free { background: var(--green-soft); color: var(--green); }
 /* a model's context, when it is a large one: grey, as it is a fact, not a warning */
-/* which way a model goes (#726): through magpie, or straight to its vendor */
+/* which way a model goes (#726): through Echo, or straight to its vendor */
 .badge.path { letter-spacing: .02em; text-transform: none; white-space: nowrap; }
 .badge.path.via { background: var(--accent-soft); color: var(--accent); }
 .badge.path.direct { background: var(--pill); color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
@@ -1930,7 +1930,7 @@ body.window .ag-sk-icon { width: 22px; height: 22px; border-radius: 6px; }
 .acc .alane:hover, .acc .alane.open { color: var(--fg); background: var(--pill-hover); }
 .acc .alane-in { width: 64px; }
 .acc .acap-held { color: var(--fg); }
-/* held for magpie's requests, not the agent signed in to it: a warning */
+/* held for Echo's requests, not the agent signed in to it: a warning */
 .acc .acap-held.acap-direct { color: var(--amber); }
 .accts .acc.with-am { flex-wrap: wrap; row-gap: 3px; }
 .acc .acct-models { flex-basis: 100%; display: grid; gap: 7px; padding: 6px 0 2px 25px; cursor: auto; }
@@ -2228,9 +2228,9 @@ body.window .ag-sk-icon { width: 22px; height: 22px; border-radius: 6px; }
 .segs { position: relative; display: inline-flex; padding: 2px; border-radius: 7px; background: var(--pill); align-self: flex-start; }
 .opt { position: relative; z-index: 1; white-space: nowrap; height: 22px; padding: 0 10px; border-radius: 5px; font-size: 12px; color: var(--muted); transition: color .18s var(--ease), transform .14s var(--ease); }
 .opt.on { color: var(--fg); }
-/* how often magpie checks for updates, while it doesn't by itself */
+/* how often Echo checks for updates, while it doesn't by itself */
 .update-every-row.off .segs { opacity: .55; }
-/* Command line: each shell's `magpie`, a dot for whether it runs this app */
+/* Command line: each shell's `Echo`, a dot for whether it runs this app */
 .cli-row .sub { overflow-wrap: anywhere; }
 .cli-shells { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
 .cli-shell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; color: var(--muted); min-height: 22px; }
@@ -2986,7 +2986,7 @@ body.window .row.agent .who.with-models { flex-wrap: wrap; row-gap: 0; }
 .am-order.sorting .am-or { transition: transform .22s cubic-bezier(.22, 1, .36, 1); cursor: grabbing; }
 .am-order .am-or.dragging { position: relative; z-index: 2; transition: none; background: var(--pop-bg); box-shadow: 0 6px 18px rgba(20, 22, 30, .12), 0 0 0 1px var(--line); }
 
-/* ---- an agent's switch onto magpie ---------------------------------------- */
+/* ---- an agent's switch onto Echo ---------------------------------------- */
 /* the rows drawn again under the line said beneath each name had WebKit's
    scroll anchoring move the list a few px before the page was held back
    (claude-direct.test.cjs); the page holds the reader itself */
@@ -2996,7 +2996,7 @@ body.window .row.agent > .ag-conn { margin-left: 12px; align-self: center; curso
 .ag-conn-row .ag-conn-said { flex: 1; min-width: 0; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ag-conn-row .lib-switch { cursor: pointer; }
 
-/* 「接入」 in the window: a row says whether the agent goes through magpie —
+/* 「接入」 in the window: a row says whether the agent goes through Echo —
    a line under its name, a link that opens it, its switch */
 .ag-lead { margin: 0 2px 12px; font-size: 12.5px; color: var(--fg-2); }
 .ag-lead b { font-weight: 600; color: var(--fg); }

@@ -1,4 +1,4 @@
-// magpie — one state object per view, rendered into a list. No framework.
+// Echo — one state object per view, rendered into a list. No framework.
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 const params = new URLSearchParams(location.search);
@@ -59,7 +59,7 @@ const sseShown = new Map(); // call id → how many events are drawn
 let savedModelFavorites = [];
 try { savedModelFavorites = JSON.parse(localStorage.getItem("magpie.modelFavorites") || "[]"); } catch {}
 const modelFavorites = new Set(Array.isArray(savedModelFavorites) ? savedModelFavorites : []);
-// A model through magpie is starred as its catalog id, which is the same in
+// A model through Echo is starred as its catalog id, which is the same in
 // every agent; the agent's own models by their value. Stars kept by value
 // before still count.
 const favoriteKey = (o) => o.ref || o.value;
@@ -88,9 +88,9 @@ async function api(path, body, heads) {
       err.code = data.code;
       if (data.offline === "stage" || data.offline === "disconnect") err.offline = data.offline;
     }
-    // magpie has no models to connect an agent to yet: said in the
+    // Echo has no models to connect an agent to yet: said in the
     // reader's language
-    if (data?.code === "no_models") err.message = t("Add a provider or subscription in magpie first, then connect {agent}", { agent: data.agent });
+    if (data?.code === "no_models") err.message = t("Add a provider or subscription in Echo first, then connect {agent}", { agent: data.agent });
     if (data?.why) err.why = data.why; // a failed move's reason, said in the reader's language
     // an account the agent is signed in to, refused removal while it has
     // another: said in the reader's language
@@ -209,15 +209,15 @@ function optionFor(field, value) {
   return field.options.find((o) => o.value === value);
 }
 
-// directSaid: a model the agent asks its own vendor for itself, magpie not
-// in the way (Claude Code on its own sign-in), so its config names no magpie
-// endpoint — which read as magpie having failed to set it up
+// directSaid: a model the agent asks its own vendor for itself, Echo not
+// in the way (Claude Code on its own sign-in), so its config names no Echo
+// endpoint — which read as Echo having failed to set it up
 function directSaid(a, opt) {
   if (!opt?.direct) return "";
-  return t("Not through magpie: {agent} asks {vendor} for it directly, with its own sign-in or key, so {path} has no magpie endpoint — that is expected.", { agent: a.name, vendor: opt.direct, path: a.path });
+  return t("Not through Echo: {agent} asks {vendor} for it directly, with its own sign-in or key, so {path} has no Echo endpoint — that is expected.", { agent: a.name, vendor: opt.direct, path: a.path });
 }
 
-// Rows in the shape of the list while magpie first reads the agents; a
+// Rows in the shape of the list while Echo first reads the agents; a
 // reload keeps the rows it has until the new ones are in.
 function renderAgentsLoading() {
   const page = $("#view-agents");
@@ -253,7 +253,7 @@ function renderAgents() {
   agentsLead(list);
   if (!state.agents.length) {
     const e = el("div", "empty-state");
-    e.append(el("b", "", t("No agents found")), el("span", "", t("Install Claude Code, Codex, Gemini CLI, OpenCode… and magpie will list them here.")));
+    e.append(el("b", "", t("No agents found")), el("span", "", t("Install Claude Code, Codex, Gemini CLI, OpenCode… and Echo will list them here.")));
     list.append(e);
   }
   const { shown: used, folded } = arrangeAgents();
@@ -271,7 +271,7 @@ function renderAgents() {
     const wide = (f) => f.label === "model" || f.label === "large" || f.label === "executor" || f.label === "planner";
     // an effort or ultracode the model has none of (Claude Code on Haiku
     // 4.5, ultracode short of xhigh) isn't drawn at all, nor are subagents
-    // with no model to go on (Claude Code's, until it runs through magpie)
+    // with no model to go on (Claude Code's, until it runs through Echo)
     const none = (f) => (f.key === "effort" || f.key === "ultracode" || f.label === "subagents" || f.label === SUB_EFFORT || f.label === MEMORIES) && !f.options.length && !f.value;
     const shownFields = a.fields.filter((f) => !TIERS.includes(f.label) && !TIER_EFFORTS.includes(f.label) && !none(f));
     const tiers = tierMenu(a);
@@ -313,14 +313,14 @@ function renderAgents() {
       fields.append(fieldBtn(f, plain === 1 ? "solo" : wide(f) ? "main" : "side"));
     }
     // an agent that takes the gateway only from its environment (agy): a
-    // square that copies the command starting it on magpie
+    // square that copies the command starting it on Echo
     // one with nothing else to set (Cursor Private Inference) has the
     // command as its one control, in words
     const launchOnly = !!a.launch && !a.fields.length && !a.import;
     if (a.launch && !launchOnly) extras.append(launchButton(a));
     if (extras.childNodes.length) fields.append(extras);
-    // an app that takes magpie by a link of its own (Cindy) has nothing to
-    // pick: its row opens the link, and the app asks to add magpie
+    // an app that takes Echo by a link of its own (Cindy) has nothing to
+    // pick: its row opens the link, and the app asks to add Echo
     if (a.import && mode !== "panel") fields.append(importButton(a));
     if (launchOnly && mode !== "panel") fields.append(launchSolo(a));
     // the panel shows what's set as words, and a row's controls only
@@ -331,7 +331,7 @@ function renderAgents() {
       // in words like the rest, the row itself the link (or the command)
       const act = a.import ? importButton(a) : launchSolo(a);
       sum = el("span", "ag-sum");
-      sum.append(a.import ? el("span", "v" + (a.added ? "" : " empty"), a.added ? "magpie" : t("Add magpie")) : el("span", "v empty", t("Copy launch command")), el("span"));
+      sum.append(a.import ? el("span", "v" + (a.added ? "" : " empty"), a.added ? "magpie" : t("Add Echo")) : el("span", "v empty", t("Copy launch command")), el("span"));
       const c = el("span", "chev");
       c.append(a.import ? svg(OUT, 10, 1.6) : svg(LAUNCH_GLYPH, 10, 1.5));
       sum.append(c);
@@ -437,15 +437,15 @@ function renderAgents() {
     // the CLI's version, and an update when one is out (#202); the panel's
     // name column has no room for it
     if (mode !== "panel") who.append(cliTag(a));
-    // which of magpie's models its lists show, on a line under the name
+    // which of Echo's models its lists show, on a line under the name
     if (mode !== "panel" && a.models && !kind) {
       const line = el("div", "ag-models-line");
       line.append(modelsEntry(a));
       who.append(line);
       who.classList.add("with-models");
     }
-    // connected to magpie or not, said under the name, with where the agent
-    // picks among magpie's models itself
+    // connected to Echo or not, said under the name, with where the agent
+    // picks among Echo's models itself
     const sw = connectable(a) ? connectSwitch(a) : null;
     if (kind) {
       // Claude Code's tiers and subagents have rows of their own when opened
@@ -459,7 +459,7 @@ function renderAgents() {
     }
     if (sw && openBox) {
       const line = el("div", "ag-conn-row");
-      line.append(el("span", "k", t("magpie")), el("span", "ag-conn-said", connectSaid(a)), sw);
+      line.append(el("span", "k", t("Echo")), el("span", "ag-conn-said", connectSaid(a)), sw);
       openBox.querySelector(".ag-body").prepend(line);
     }
     row.append(agentHandle(a, row, inFold), who);
@@ -746,11 +746,11 @@ function profileDetail(p, footed) {
 }
 
 // driftNote: under the name of an agent whose config something else
-// rewrote since magpie set it — the row still shows a magpie model while the
-// agent no longer reaches magpie, or it was put back on a model of its own —
+// rewrote since Echo set it — the row still shows an Echo model while the
+// agent no longer reaches Echo, or it was put back on a model of its own —
 // what happened, and the one click that sets it again.
 // driftFix is the one thing a drifted agent shows: an amber pill after its
-// name that sets magpie's settings again. What is off is its tooltip; taking
+// name that sets Echo's settings again. What is off is its tooltip; taking
 // the config as it is now is in the row's menu.
 function driftFix(a, label = "Apply again") {
   const d = a.drift, f = a.fields.find((x) => x.key === d.field);
@@ -765,26 +765,26 @@ function driftFix(a, label = "Apply again") {
 }
 
 const DRIFT_WHY = {
-  unwired: "{agent} no longer goes through magpie — its config was changed",
-  replaced: "{agent} was switched off {model} outside magpie",
-  bypassed: "{agent} was used without going through magpie — restart it after applying",
+  unwired: "{agent} no longer goes through Echo — its config was changed",
+  replaced: "{agent} was switched off {model} outside Echo",
+  bypassed: "{agent} was used without going through Echo — restart it after applying",
 };
 
 const REAPPLY = "M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3.25h-3.25";
 
-// An unplugged plug: the agent taken off magpie.
+// An unplugged plug: the agent taken off Echo.
 const UNPLUG = "M6 2v3M10 2v3M4.5 5h7v2.5a3.5 3.5 0 0 1-7 0zM8 11v3M2 2l12 12";
-const DISCONNECT_TIP = "Take out everything magpie wrote into {agent}'s config and put back what it had before";
+const DISCONNECT_TIP = "Take out everything Echo wrote into {agent}'s config and put back what it had before";
 
-// An agent is connected to magpie with a switch (the owner: the Agents page
-// connects an agent, and its models are picked in the agent): on, magpie is
-// its provider and its own model list has magpie's models (agent.Connect);
-// off, magpie takes out what it wrote (askDisconnect). An agent with none of
-// magpie's models to offer (Cursor, Copilot) has no switch.
-// the field magpie is picked in: the first, or Gemini CLI's model, its
+// An agent is connected to Echo with a switch (the owner: the Agents page
+// connects an agent, and its models are picked in the agent): on, Echo is
+// its provider and its own model list has Echo's models (agent.Connect);
+// off, Echo takes out what it wrote (askDisconnect). An agent with none of
+// Echo's models to offer (Cursor, Copilot) has no switch.
+// the field Echo is picked in: the first, or Gemini CLI's model, its
 // first being how it signs in
 const connectField = (a) => a.fields.find((f) => f.options.some((o) => o.ref)) || a.fields.find((f) => f.options.some((o) => o.value === "magpie"));
-// connectable: magpie has models for it — in its pickers, or every one
+// connectable: Echo has models for it — in its pickers, or every one
 // hidden from its lists, which leave its pickers but not the way back (#356)
 function connectable(a) {
   return !a.import && (!!connectField(a) || !!a.models?.listed);
@@ -797,24 +797,24 @@ function connectSaid(a) {
   if (!a.wired) return t("Not connected · {agent} uses its own settings", { agent: a.name });
   if (menuFromList(a)) return t("Connected · {n} models in {agent}'s model menu", { n: a.models.shown, agent: a.name });
   const at = PICKS_IN[a.id];
-  return at ? t("Connected · pick magpie's models with {cmd} in {agent}", { cmd: at, agent: a.name }) : t("Connected · magpie's models are in {agent}'s model list", { agent: a.name });
+  return at ? t("Connected · pick Echo's models with {cmd} in {agent}", { cmd: at, agent: a.name }) : t("Connected · Echo's models are in {agent}'s model list", { agent: a.name });
 }
 
 // connectedSaid: what the switch connected an agent on, and why (#726:
 // switched on, Codex kept its last pick, Claude Code started on a Sonnet
-// through magpie and Antigravity on some model, with nothing to say why).
+// through Echo and Antigravity on some model, with nothing to say why).
 // c is agent.Connection: how the model was chosen.
 const CONNECTED_HOW = {
-  again: "{agent} is connected to magpie · back on {model}, what it was on when it was switched off",
-  same: "{agent} is connected to magpie · on {model} through magpie, the model it was on",
-  alike: "{agent} is connected to magpie · on {model} through magpie, the model it was on",
-  default: "{agent} is connected to magpie · on {model} through magpie: it had no model set, so the first of its own",
-  first: "{agent} is connected to magpie · on {model} through magpie: magpie doesn't serve the model it was on",
+  again: "{agent} is connected to Echo · back on {model}, what it was on when it was switched off",
+  same: "{agent} is connected to Echo · on {model} through Echo, the model it was on",
+  alike: "{agent} is connected to Echo · on {model} through Echo, the model it was on",
+  default: "{agent} is connected to Echo · on {model} through Echo: it had no model set, so the first of its own",
+  first: "{agent} is connected to Echo · on {model} through Echo: Echo doesn't serve the model it was on",
 };
 function connectedSaid(a, c) {
-  const plain = t("{agent} is connected to magpie", { agent: a.name });
-  if (a.native && c?.how === "joined") return t("{agent} is connected to magpie", { agent: a.name });
-  if (c?.how === "joined") return t("{agent} is connected to magpie · it stays on its own last pick; magpie's models join its {cmd}", { agent: a.name, cmd: PICKS_IN[a.id] || "/model" });
+  const plain = t("{agent} is connected to Echo", { agent: a.name });
+  if (a.native && c?.how === "joined") return t("{agent} is connected to Echo", { agent: a.name });
+  if (c?.how === "joined") return t("{agent} is connected to Echo · it stays on its own last pick; Echo's models join its {cmd}", { agent: a.name, cmd: PICKS_IN[a.id] || "/model" });
   const now = state.agents.find((x) => x.id === a.id);
   const f = now && startField(now);
   const model = f?.value ? optionFor(f, f.value)?.label || f.value : "";
@@ -826,8 +826,8 @@ function connectSwitch(a) {
   s.type = "button";
   s.setAttribute("role", "switch");
   s.setAttribute("aria-checked", a.wired ? "true" : "false");
-  s.setAttribute("aria-label", t("Connect {agent} to magpie", { agent: a.name }));
-  s.title = a.wired ? t("Connected · switch off to put back what {agent} had before magpie", { agent: a.name }) : t("Switch on and {agent}'s model list gets magpie's models", { agent: a.name });
+  s.setAttribute("aria-label", t("Connect {agent} to Echo", { agent: a.name }));
+  s.title = a.wired ? t("Connected · switch off to put back what {agent} had before Echo", { agent: a.name }) : t("Switch on and {agent}'s model list gets Echo's models", { agent: a.name });
   s.append(el("i"));
   s.onclick = async (e) => {
     e.stopPropagation();
@@ -840,7 +840,7 @@ function connectSwitch(a) {
       renderAgents();
       const msg = connectedSaid(a, state.connected);
       if (state.notice) status(`${msg}. ${t(state.notice)}`, "warn", 9000);
-      else if (msg !== t("{agent} is connected to magpie", { agent: a.name })) status(msg, "ok", 7000);
+      else if (msg !== t("{agent} is connected to Echo", { agent: a.name })) status(msg, "ok", 7000);
       else status(msg, "ok");
     } catch (err) {
       s.disabled = false;
@@ -852,14 +852,14 @@ function connectSwitch(a) {
 }
 
 // ---------- 「接入」 in the window (the owner's design boards) ----------
-// A row there answers one thing: does the agent go through magpie. Its
+// A row there answers one thing: does the agent go through Echo. Its
 // switch stands where the model and effort pickers stood, a line under the
 // name says what it runs on and where it picks a model, and a connected
 // one opens to what else there is: when it takes effect, which models it
-// lists, what a new session starts on, the files magpie changed, and the
+// lists, what a new session starts on, the files Echo changed, and the
 // way back.
 
-// agents with no way onto magpie: no switch, the reason instead
+// agents with no way onto Echo: no switch, the reason instead
 const NATIVE_ONLY = {
   cursor: "Only Cursor's own models",
   copilot: "Only GitHub Copilot's own models",
@@ -870,7 +870,7 @@ const NATIVE_ONLY = {
 // the row
 const NO_PICKER = new Set(["gemini", "hermes", "morph", "agy", "muse"]);
 // agents whose own model menu is the list picked here: no one model to
-// start on, but which of magpie's it offers (Claude Desktop and Cursor
+// start on, but which of Echo's it offers (Claude Desktop and Cursor
 // Private Inference read /v1/models, and the user switches among them in it)
 const MENU_FROM_LIST = new Set(["claude-desktop", "cursor-local"]);
 const menuFromList = (a) => MENU_FROM_LIST.has(a.id) && a.wired && !!a.models;
@@ -914,9 +914,9 @@ function fillMenuButton(b, a) {
 
 // what turning one on costs, said in its opened row
 const CONNECT_COST = {
-  gemini: "Gemini CLI's requests all go through magpie; its Google sign-in is turned off first and comes back when you disconnect",
+  gemini: "Gemini CLI's requests all go through Echo; its Google sign-in is turned off first and comes back when you disconnect",
 };
-// agents that read magpie's list only as they start: copies already
+// agents that read Echo's list only as they start: copies already
 // running keep the list they started with (agent.Stale)
 const STARTS_WITH = new Set(["codex", "claude"]);
 
@@ -926,8 +926,8 @@ const previews = {}; // agent id → its disconnect preview, as last read
 
 const anyMagpieModels = () => state.agents.some((a) => connectField(a)?.options.some((o) => o.ref));
 
-// connectKind: "ok" (a switch), "empty" (a switch for when magpie has
-// models), "no" (never), "link" (an app magpie is added to by a link of its
+// connectKind: "ok" (a switch), "empty" (a switch for when Echo has
+// models), "no" (never), "link" (an app Echo is added to by a link of its
 // own: Cindy), "" (the row as it was)
 function connectKind(a) {
   if (a.import) return "link";
@@ -964,8 +964,8 @@ function connectLine(a, kind) {
   const say = (s, cls) => { words.textContent = s; if (cls) line.classList.add(cls); };
   if (kind === "no") { say(t(NATIVE_ONLY[a.id])); return line; }
   if (kind === "link") {
-    if (a.added) say(t("Added · magpie is a provider in {agent}", { agent: a.name }), "on");
-    else say(t("Not added · {agent} asks to add magpie when its link opens", { agent: a.name }));
+    if (a.added) say(t("Added · Echo is a provider in {agent}", { agent: a.name }), "on");
+    else say(t("Not added · {agent} asks to add Echo when its link opens", { agent: a.name }));
     return line;
   }
   if (kind === "empty") { say(t("Add a key or a subscription first; then there are models to connect")); return line; }
@@ -976,7 +976,7 @@ function connectLine(a, kind) {
   }
   if (!a.wired) {
     const src = a.source || "";
-    if (a.id === "agy") say(t("Not connected · once connected, start it with magpie's command"));
+    if (a.id === "agy") say(t("Not connected · once connected, start it with Echo's command"));
     else if (src === "sub") say(t("Not connected · now on its Claude subscription"));
     else if (src === "chatgpt") say(t("Not connected · now signed in with ChatGPT · OpenAI's models stay available once connected"));
     else if (src === "key") say(t("Not connected · now on an API key of its own"));
@@ -1056,7 +1056,7 @@ function sheet(box, open, done) {
   run.oncancel = run.onfinish;
 }
 
-// startField: the field an agent's model is picked in, magpie's among
+// startField: the field an agent's model is picked in, Echo's among
 // its options (Gemini CLI's model, not how it signs in)
 function startField(a) {
   return a.fields.find((f) => f.key === "model" && f.options.some((o) => o.ref)) || connectField(a);
@@ -1064,12 +1064,12 @@ function startField(a) {
 
 // startButton picks the model an agent starts on, from the row. It says
 // what the agent is on, connected or not, its Default or a model, and
-// lists every choice: the agent's own models with magpie's. A magpie model
+// lists every choice: the agent's own models with Echo's. A Echo model
 // picked while it isn't connected connects it and starts it on it. Not
 // connected, only Claude Code said its model, the others Pick a model
 // beside it (EZN7L2C3, #834: 这里似乎需要统一); and Claude Code's list had
 // lost the one picked. A field that isn't a model (a provider) still
-// offers magpie's models alone.
+// offers Echo's models alone.
 function startButton(a, f, fieldBtn) {
   const b = fieldBtn(f, "ag-start");
   if (!a.wired && !a.native && f.key !== "model" && !f.options.some((o) => o.direct)) {
@@ -1077,10 +1077,10 @@ function startButton(a, f, fieldBtn) {
     const c = el("span", "chev");
     c.append(svg(CHEV, 11, 1.7));
     b.append(c);
-    b.title = t("Pick one of magpie's models: {agent} is connected and starts on it", { agent: a.name });
+    b.title = t("Pick one of Echo's models: {agent} is connected and starts on it", { agent: a.name });
     b.onclick = (ev) => openPicker(a, f, b, ev, (o) => !!o.ref);
   } else if (!a.wired) {
-    b.title += "\n" + t("Pick one of magpie's models: {agent} is connected and starts on it", { agent: a.name });
+    b.title += "\n" + t("Pick one of Echo's models: {agent} is connected and starts on it", { agent: a.name });
   } else if (!f.value && a.id !== "claude") {
     b.querySelector(".v").textContent = t("Its last pick");
     b.title = t("Unset, {agent} starts on its own last pick", { agent: a.name });
@@ -1109,8 +1109,8 @@ function connectRow(a, row, who, { fields, extras, fieldBtn, sw, kind }) {
   if (start) fields.querySelector(`:scope > [data-key="${CSS.escape(start.key)}"]`)?.remove();
   if (kind === "ok") {
     if (a.wired) row.append(expandLink(a));
-    // the square copying the command that starts it on magpie (agy), the
-    // only way it takes magpie: on the row, before the model
+    // the square copying the command that starts it on Echo (agy), the
+    // only way it takes Echo: on the row, before the model
     const launch = a.wired && fields.querySelector(".field.launch");
     if (launch) row.append(launch);
     if (start) row.append(startButton(a, start, fieldBtn));
@@ -1126,7 +1126,7 @@ function connectRow(a, row, who, { fields, extras, fieldBtn, sw, kind }) {
     off.disabled = true;
     off.setAttribute("role", "switch");
     off.setAttribute("aria-checked", "false");
-    off.setAttribute("aria-label", t("Connect {agent} to magpie", { agent: a.name }));
+    off.setAttribute("aria-label", t("Connect {agent} to Echo", { agent: a.name }));
     off.title = t("Add a key or a subscription first; then there are models to connect");
     off.append(el("i"));
     row.append(add, off);
@@ -1146,7 +1146,7 @@ function connectRow(a, row, who, { fields, extras, fieldBtn, sw, kind }) {
 
 // agentsLead: above the window's list, what 「接入」 does, said once in a
 // line; while no agent is connected, as a welcome, with a way to add a
-// provider when magpie has no models to give
+// provider when Echo has no models to give
 function agentsLead(list) {
   let lead = $("#agentsLead");
   if (!lead) {
@@ -1161,12 +1161,12 @@ function agentsLead(list) {
   const first = !state.agents.some((a) => a.wired);
   lead.classList.toggle("welcome", first);
   if (!first) {
-    const [pre, post] = t("Switch an agent on and the models you set up in magpie show up as the {magpie} provider in its own model list; or pick its model right here.").split("{magpie}");
-    lead.append(pre, el("b", "", "magpie"), post || "");
+    const [pre, post] = t("Switch an agent on and the models you set up in Echo show up as the {Echo} provider in its own model list; or pick its model right here.").split("{Echo}");
+    lead.append(pre, el("b", "", "Echo"), post || "");
     return;
   }
-  lead.append(el("b", "ag-lead-h", t("Let your agents use the models you set up in magpie")));
-  lead.append(el("p", "", t("Switch an agent on and your models show up as the magpie provider in its own model list, to change in the agent. Or pick a model right here: the agent is connected and starts on it. Switch it off and it goes back to how it was.")));
+  lead.append(el("b", "ag-lead-h", t("Let your agents use the models you set up in Echo")));
+  lead.append(el("p", "", t("Switch an agent on and your models show up as the Echo provider in its own model list, to change in the agent. Or pick a model right here: the agent is connected and starts on it. Switch it off and it goes back to how it was.")));
   if (!anyMagpieModels()) {
     const add = el("button", "text primary", t("Add a provider"));
     add.type = "button";
@@ -1205,8 +1205,8 @@ function connectPanel(a, { fields, fieldBtn }) {
     // the command in the words as code, wherever the language puts it
     const said = (s, cmd) => { const [pre, post] = t(s, { agent: a.name }).split("{cmd}"); return line(pre, code(cmd), post || ""); };
     if (a.id === "claude") parts.push(said("New sessions take it; switch the tiers in {cmd}.", "/model"));
-    // its own models still there beside magpie's (Codex on ChatGPT)
-    else if (a.joined) parts.push(said("Reopen {agent}: its own models stay in {cmd}, and magpie's join them.", at));
+    // its own models still there beside Echo's (Codex on ChatGPT)
+    else if (a.joined) parts.push(said("Reopen {agent}: its own models stay in {cmd}, and Echo's join them.", at));
     else if (STARTS_WITH.has(a.id)) parts.push(said("Reopen {agent}, then pick any model in {cmd}.", at));
     else parts.push(said("Pick any model in {agent}'s {cmd}.", at));
     if (staleNow(a)) {
@@ -1247,15 +1247,15 @@ function connectPanel(a, { fields, fieldBtn }) {
     if (rows.length) kv(t("Tiers"), ...rows);
     const main = a.fields.find((f) => f.key === "model");
     const hasSub = main?.options.some((o) => (o.ref || "").startsWith("claude/"));
-    if (hasSub) kv(t("Claude models"), line(t("Your Claude subscription is in magpie; picking a claude-* model goes through it as before")));
+    if (hasSub) kv(t("Claude models"), line(t("Your Claude subscription is in Echo; picking a claude-* model goes through it as before")));
     else {
       const add = el("button", "ag-quiet accent", t("Add a Claude subscription"));
       add.type = "button";
       add.onclick = () => addProviderFromAgents();
-      kv(t("Claude models"), line(t("claude-* models need a Claude subscription in magpie"), add));
+      kv(t("Claude models"), line(t("claude-* models need a Claude subscription in Echo"), add));
     }
   }
-  // which of magpie's models it lists, by whose they are
+  // which of Echo's models it lists, by whose they are
   if (a.models) {
     const chips = line();
     chips.classList.add("ag-chips");
@@ -1304,10 +1304,10 @@ function connectPanel(a, { fields, fieldBtn }) {
   if (a.launch) {
     const cp = el("button", "ag-quiet", t("Copy"));
     cp.type = "button";
-    cp.onclick = () => copy(a.launch, t("Launch command"), null, t("Copied — run it to start {name} on magpie", { name: a.name }));
+    cp.onclick = () => copy(a.launch, t("Launch command"), null, t("Copied — run it to start {name} on Echo", { name: a.name }));
     kv(t("Start it with"), line(code(a.launch), cp));
   }
-  // the files magpie changed, and the way back
+  // the files Echo changed, and the way back
   const foot = el("div", "ag-foot");
   const files = el("span", "ag-files");
   const view = el("button", "ag-quiet");
@@ -1371,7 +1371,7 @@ function changesList(changes) {
       if (l.op === "~" && l.was) r.title = t("Now: {line}", { line: l.was });
       return r;
     };
-    // a list magpie wrote whole (Claude Code's modelPicker, Codex's
+    // a list Echo wrote whole (Claude Code's modelPicker, Codex's
     // catalog) is a few lines and the rest on asking
     const lines = c.lines || [], FEW = 8;
     f.append(...lines.slice(0, FEW).map(line));
@@ -1386,19 +1386,19 @@ function changesList(changes) {
   return box;
 }
 
-// askDisconnect takes magpie out of an agent's config once asked: every
-// field magpie set, and its endpoint and key, give way to what the agent
-// had before magpie (agent.Disconnect). Picking Default isn't that: it is
+// askDisconnect takes Echo out of an agent's config once asked: every
+// field Echo set, and its endpoint and key, give way to what the agent
+// had before Echo (agent.Disconnect). Picking Default isn't that: it is
 // the agent as installed.
 function askDisconnect(a) {
   const ed = el("div", "editor disconnect-ask");
   const head = el("div", "ehead");
-  head.append(icon(a.icon), el("b", "", t("Disconnect {agent} from magpie?", { agent: a.name })));
+  head.append(icon(a.icon), el("b", "", t("Disconnect {agent} from Echo?", { agent: a.name })));
   ed.append(head);
   ed.append(el("p", "lib-confirm", t("{agent} goes back to how it was before it was connected; these are the places put back.", { agent: a.name })));
   // what changes, line by line, read from a dry run on a copy (preview.go);
   // where none can be had, the old words
-  const said = el("p", "lib-confirm", t("magpie takes out everything it wrote into {agent}'s config — its endpoint, key, models and effort — and puts back the settings {agent} had before. magpie's providers and accounts stay as they are.", { agent: a.name }));
+  const said = el("p", "lib-confirm", t("Echo takes out everything it wrote into {agent}'s config — its endpoint, key, models and effort — and puts back the settings {agent} had before. Echo's providers and accounts stay as they are.", { agent: a.name }));
   const body = el("div", "ag-diff-wrap");
   const show = (changes) => {
     if (changes?.length) body.replaceChildren(changesList(changes));
@@ -1414,7 +1414,7 @@ function askDisconnect(a) {
     go.disabled = previewBlocked;
   }, (err) => { if (!a.native) { show(null); return; } previewBlocked = true; go.disabled = true; body.replaceChildren(el("p", "lib-confirm", t(err.message))); });
   ed.append(body);
-  if (a.id === "codex") ed.append(el("p", "ag-note", t("magpie's provider table stays, so sessions opened on magpie's models still open")));
+  if (a.id === "codex") ed.append(el("p", "ag-note", t("Echo's provider table stays, so sessions opened on Echo's models still open")));
   const bar = el("div", "bar");
   const go = el("button", "text primary danger-fill", t("Disconnect and restore"));
   go.disabled = previewBlocked;
@@ -1429,7 +1429,7 @@ function askDisconnect(a) {
       delete previews[a.id];
       if (agentExpanded === a.id) agentExpanded = null;
       renderAgents();
-      const msg = t(offline ? "Saved settings restored; magpie was removed from {agent}" : "{agent} no longer goes through magpie; its own settings are back", { agent: a.name });
+      const msg = t(offline ? "Saved settings restored; Echo was removed from {agent}" : "{agent} no longer goes through Echo; its own settings are back", { agent: a.name });
       if (state.notice) status(`${msg}. ${t(state.notice)}`, "warn", 9000);
       else status(msg, "ok");
     } catch (err) {
@@ -1437,9 +1437,9 @@ function askDisconnect(a) {
       go.classList.remove("busy");
       if (!offline && err.code === "runtime_unavailable" && err.offline === "disconnect" && revision) {
         offline = true;
-        head.querySelector("b").textContent = t("Restore saved settings and remove magpie?");
-        ed.querySelector(".lib-confirm").textContent = t("Restore saved settings and remove magpie without contacting Aside? Close Aside first if it is running.");
-        go.textContent = t("Restore saved settings and remove magpie");
+        head.querySelector("b").textContent = t("Restore saved settings and remove Echo?");
+        ed.querySelector(".lib-confirm").textContent = t("Restore saved settings and remove Echo without contacting Aside? Close Aside first if it is running.");
+        go.textContent = t("Restore saved settings and remove Echo");
         cancel.focus({ preventScroll: true });
         return;
       }
@@ -1460,14 +1460,14 @@ async function keepAgent(a) {
   try { state = await api("agents/keep/" + a.id, {}); renderAgents(); } catch (e) { status(e.message, "err"); }
 }
 
-// reapplyAgent writes what magpie set on the agent into its config again.
+// reapplyAgent writes what Echo set on the agent into its config again.
 async function reapplyAgent(a, btn) {
   btn?.classList.add("busy");
   try {
     state = await api("agents/reapply/" + a.id, {});
     renderAgents();
     document.querySelector(`.agent[data-id="${CSS.escape(a.id)}"] .field`)?.classList.add("flash");
-    const msg = t("{agent} goes through magpie again", { agent: a.name });
+    const msg = t("{agent} goes through Echo again", { agent: a.name });
     if (state.notice) status(`${msg}. ${t(state.notice)}`, "warn", 9000);
     else status(msg, "ok");
   } catch (e) {
@@ -1478,9 +1478,9 @@ async function reapplyAgent(a, btn) {
 
 // ---------- the agents' CLIs (#202) ----------
 // Each agent's CLI shows its version after its name, faint; when a newer one
-// is out and magpie knows how the CLI was installed (its own updater, npm,
+// is out and Echo knows how the CLI was installed (its own updater, npm,
 // bun, pnpm, Homebrew), a pill beside it updates it. The versions come after
-// the rows are drawn, never holding them up; one magpie can't tell how it
+// the rows are drawn, never holding them up; one Echo can't tell how it
 // was installed shows its version alone.
 
 let cliInfo = {}; // agent id → { version, latest, via, command, update }
@@ -1501,7 +1501,7 @@ function cliTag(a) {
   const c = cliInfo[a.id];
   if (!c?.version) return box;
   const v = el("span", "ag-ver", c.version);
-  v.title = !c.via ? t("{agent} {v} · magpie can't tell how it was installed — update it the way you installed it", { agent: a.name, v: c.version })
+  v.title = !c.via ? t("{agent} {v} · Echo can't tell how it was installed — update it the way you installed it", { agent: a.name, v: c.version })
     : c.update ? t("{agent} {v} is installed · {latest} is out", { agent: a.name, v: c.version, latest: c.latest })
     : t("{agent} {v} · up to date", { agent: a.name, v: c.version });
   box.append(v);
@@ -1653,9 +1653,9 @@ async function updateAllCLIs() {
 }
 
 // ---------- installing the agents not here (#727) ----------
-// Under the list, the agents magpie knows that aren't on this machine, each
+// Under the list, the agents Echo knows that aren't on this machine, each
 // with its vendor's install commands to copy into a terminal: the vendor's
-// installer first, then Homebrew's or npm's. magpie doesn't run them — a
+// installer first, then Homebrew's or npm's. Echo doesn't run them — a
 // new computer may have no Node.js for npm yet, and an installer may ask
 // for things in the terminal. Folded unless no agent is here at all.
 
@@ -1676,13 +1676,13 @@ async function loadInstalls() {
 // or winget), and the note says so, and what may still be asked for.
 function installNote(items) {
   const node = items.flatMap((x) => x.commands).find((c) => c.node)?.node;
-  const after = t("Run a command in a terminal, then come back: magpie lists the agent here once it is installed.");
+  const after = t("Run a command in a terminal, then come back: Echo lists the agent here once it is installed.");
   if (node === "winget") return t("No Node.js was found here, so the npm commands install it with winget first; run them in PowerShell. If npm isn't found after Node.js is installed, open a new terminal and run the npm install again.") + " " + after;
   if (node) {
     const s = t("No Node.js was found here, so the npm commands install it with nvm first.") + " " + after;
     return node === "nvm-mac" ? s + " " + t("On a Mac, nvm needs Xcode's Command Line Tools: if it asks for them, run xcode-select --install, then the command again.") : s;
   }
-  return t("Run a command in a terminal, then come back: magpie lists the agent here once it is installed. The npm commands need Node.js (nodejs.org).");
+  return t("Run a command in a terminal, then come back: Echo lists the agent here once it is installed. The npm commands need Node.js (nodejs.org).");
 }
 
 function paintInstalls() {
@@ -1743,41 +1743,41 @@ function paintInstalls() {
 }
 
 // ---------- the agents' order, and the ones put away ----------
-// Kept in magpie's own settings (agentOrder, agentsHidden, agentsShown),
+// Kept in Echo's own settings (agentOrder, agentsHidden, agentsShown),
 // never in an agent's files. An agent the order doesn't name — one
-// installed since — follows the ordered ones, in magpie's own order.
+// installed since — follows the ordered ones, in Echo's own order.
 
 let agentsGlide = null; // how the panel's edge moves after the next render
 let panelOpenAgent = null; // the one agent row the panel has opened
 
-// set up: a model, a provider, a role given one — what magpie is there for.
+// set up: a model, a provider, a role given one — what Echo is there for.
 // How the agent's own model is run (ultracode, an effort) is not: turning
 // Claude Code's ultracode on folded every other agent away under Show more.
 // One with 「接入」's switch is set up when it is connected, and only then
 // (#726): its fields are read from its own files, so one not connected kept
 // its row up for a model of its own (Antigravity, DeepSeek Harness), and a
 // connected Codex starting on its last choice, no model set, went under
-// Not set up. One magpie connected that has come apart (drift) stays up
+// Not set up. One Echo connected that has come apart (drift) stays up
 // too, to be put right. One with no switch (Cursor, an app's own models)
 // goes by what is set on it, as before, though while an agent can be
 // connected it doesn't start the folding (arrangeAgents): its values are
 // its own files' too, and a Cursor on auto would fold every agent not
-// connected yet away on a fresh magpie.
+// connected yet away on a fresh Echo.
 const tweak = (f) => f.key === "ultracode" || f.key === "effort" || f.key.endsWith("_effort");
 const onMagpie = (a) => !!(a.added || a.wired || a.drift);
 // one whose only control is its launch command (Cursor Private Inference)
 // has nothing set to tell by, and stays up while it is there
 const agentUsed = (a) => onMagpie(a) || (!connectable(a) && a.fields.some((f) => f.value && !tweak(f))) || (!!a.launch && !a.fields.length && !a.import);
 
-// importButton: the one control of an app magpie is added to by its import
-// link: magpie, once the app has it, or an offer to add it
+// importButton: the one control of an app Echo is added to by its import
+// link: Echo, once the app has it, or an offer to add it
 function importButton(a) {
   const b = el("button", "field solo import");
   b.type = "button";
   b.title = a.added
-    ? t("{name} has magpie as a provider · click to add it again", { name: a.name })
-    : t("Opens {name} to add magpie as a provider — confirm it there", { name: a.name });
-  b.append(icon("magpie"), el("span", "v" + (a.added ? "" : " empty"), a.added ? "magpie" : t("Add magpie")));
+    ? t("{name} has Echo as a provider · click to add it again", { name: a.name })
+    : t("Opens {name} to add Echo as a provider — confirm it there", { name: a.name });
+  b.append(icon("magpie"), el("span", "v" + (a.added ? "" : " empty"), a.added ? "magpie" : t("Add Echo")));
   const c = el("span", "chev");
   c.append(svg(OUT, 11, 1.6));
   b.append(c);
@@ -1821,15 +1821,15 @@ function unhideCleared() {
 
 // arrangeAgents: the rows in view, in order, and the folded rest. Folded is
 // what was hidden by hand, and what nothing is set on — noise in a picker —
-// unless none is set up yet (a fresh magpie has nothing to show
+// unless none is set up yet (a fresh Echo has nothing to show
 // otherwise).
 function arrangeAgents() {
   const s = state.settings || {};
   const order = s.agentOrder || [], hidden = new Set(hiddenIds());
   const rank = (a) => { const i = order.indexOf(a.id); return i < 0 ? order.length : i; };
   const all = state.agents.map((a, i) => [a, i]).sort(([x, i], [y, j]) => rank(x) - rank(y) || i - j).map(([a]) => a);
-  // with 「接入」 there to use, folding starts once one is on magpie, not for a
-  // model an agent not connected has in its own files (#726); with magpie
+  // with 「接入」 there to use, folding starts once one is on Echo, not for a
+  // model an agent not connected has in its own files (#726); with Echo
   // having nothing to connect, once any is set
   const counts = all.some(connectable) ? onMagpie : agentUsed;
   const anyUsed = all.some((a) => !hidden.has(a.id) && counts(a));
@@ -1898,7 +1898,7 @@ function agentHandle(a, row, inFold) {
   b.type = "button";
   b.setAttribute("aria-label", t("Arrange {agent}", { agent: a.name }));
   b.setAttribute("aria-haspopup", "menu");
-  b.title = inFold ? t(isHidden(a) ? "Show {agent}" : "Hide {agent}", { agent: a.name }) : t(a.wired ? "Drag to reorder · click to move, hide or disconnect from magpie" : "Drag to reorder · click to move or hide");
+  b.title = inFold ? t(isHidden(a) ? "Show {agent}" : "Hide {agent}", { agent: a.name }) : t(a.wired ? "Drag to reorder · click to move, hide or disconnect from Echo" : "Drag to reorder · click to move or hide");
   b.append(icon(a.icon));
   b.onkeydown = (e) => {
     if (inFold || !e.altKey || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
@@ -2330,7 +2330,7 @@ async function openAgentModels(a, anchor, ev) {
       .catch((e) => status(e.message, "err"));
   };
   // the shown models as the agent lists them: as dragged, or, before any
-  // drag, Codex's own (a ChatGPT account's) ahead of magpie's, as its
+  // drag, Codex's own (a ChatGPT account's) ahead of Echo's, as its
   // /model has them
   const inOrder = () => {
     const shown = models.filter((m) => !m.hidden);
@@ -2477,7 +2477,7 @@ async function openAgentModels(a, anchor, ev) {
     segOn.classList.toggle("on", shown && !order);
     segOrder.classList.toggle("on", order);
     // ordering is of the whole list: no search, no provider picked, and the
-    // foot puts magpie's own order back rather than showing or hiding
+    // foot puts Echo's own order back rather than showing or hiding
     box.classList.toggle("ordering", order);
     footNote.textContent = order ? t("Drag to put them in the order {agent} lists them; new models go last", { agent: a.name }) : t("New models are shown");
     if (order) foot.replaceChildren(footNote, el("span", "sp"), unorder);
@@ -2492,7 +2492,7 @@ async function openAgentModels(a, anchor, ev) {
     unorder.disabled = true;
     const r = await saveOrder([]);
     ordered = false;
-    // magpie's own order, as the list comes back
+    // Echo's own order, as the list comes back
     if (r?.models) {
       const was = new Map(models.map((m) => [m.id, m]));
       models.splice(0, models.length, ...r.models.map((m) => was.get(m.id) || m));
@@ -2597,11 +2597,11 @@ function openAgentMenu(anchor, a, inFold) {
     : [
         { name: "Move up", icon: MOVE_UP, key: ALT + "↑", off: i <= 0, run: () => moveAgent(a.id, i - 1) },
         { name: "Move down", icon: MOVE_DOWN, key: ALT + "↓", off: i < 0 || i >= shown.length - 1, run: () => moveAgent(a.id, i + 1) },
-        // for a config rewritten in a way magpie can't see: set it again anyway
+        // for a config rewritten in a way Echo can't see: set it again anyway
         ...(reapply ? [{ name: "Apply again", icon: REAPPLY, sep: true, run: () => reapplyAgent(a) }] : []),
         ...(a.drift?.kind === "replaced" ? [{ name: "Keep current settings", icon: CHECK, run: () => keepAgent(a) }] : []),
-        // everything magpie wrote comes out, what the user had goes back (Fate on Discord)
-        ...(a.wired ? [{ name: "Disconnect from magpie", icon: UNPLUG, sep: !reapply, tip: t(DISCONNECT_TIP, { agent: a.name }), run: () => askDisconnect(a) }] : []),
+        // everything Echo wrote comes out, what the user had goes back (Fate on Discord)
+        ...(a.wired ? [{ name: "Disconnect from Echo", icon: UNPLUG, sep: !reapply, tip: t(DISCONNECT_TIP, { agent: a.name }), run: () => askDisconnect(a) }] : []),
         { name: "Hide", icon: EYE_OFF, sep: true, run: () => setAgentHidden(a, true) },
       ];
   openRowMenu(anchor, acts);
@@ -2655,7 +2655,7 @@ function openRowMenu(anchor, acts) {
 }
 
 // Claude Code's opus/sonnet/haiku/fable can each have a model of their own
-// once it runs through magpie. They share one button, which lists the four;
+// once it runs through Echo. They share one button, which lists the four;
 // picking one opens the model picker for it.
 const TIERS = ["opus", "sonnet", "haiku", "fable"];
 // and each an effort of its own (#536), in the same menu, under its model
@@ -2671,7 +2671,7 @@ const PICKS_ITSELF = ["pi", "omo"];
 // A field that follows the model unless set — Codex's subagents, Claude
 // Code's tiers, omp's roles — is a small square after the pickers rather
 // than a third picker, which a row has no room for: it wrapped onto a line
-// of its own. So is Codex's sign-in, ChatGPT or magpie as its provider,
+// of its own. So is Codex's sign-in, ChatGPT or Echo as its provider,
 // and the effort its subagents start at (#469), and the model Codex writes
 // its memories with (Yc on Discord).
 const SUB_EFFORT = "subagent effort";
@@ -2720,33 +2720,33 @@ function subEffortTitle(a, f, opt) {
     (f.value ? "" : "\n" + t(a.id === "claude" ? "the effort Claude Code asks for" : "the session's effort, or the subagent model's own default"));
 }
 
-// launchButton copies the command that starts an agent on magpie, for one
+// launchButton copies the command that starts an agent on Echo, for one
 // that takes the gateway only from its environment (agy)
 function launchButton(a) {
   const b = el("button", "field extra launch");
   b.type = "button";
   b.append(svg(LAUNCH_GLYPH, 13, 1.5));
-  b.title = t("{name} takes magpie only from its environment · click to copy the command that starts it:", { name: a.name }) + "\n" + a.launch;
+  b.title = t("{name} takes Echo only from its environment · click to copy the command that starts it:", { name: a.name }) + "\n" + a.launch;
   b.setAttribute("aria-label", b.title);
   b.onclick = (ev) => {
     ev.stopPropagation();
-    copy(a.launch, t("Launch command"), null, t("Copied — run it to start {name} on magpie", { name: a.name }));
+    copy(a.launch, t("Launch command"), null, t("Copied — run it to start {name} on Echo", { name: a.name }));
   };
   return b;
 }
-// launchSolo is the one control of an agent that takes magpie only from
+// launchSolo is the one control of an agent that takes Echo only from
 // how it is started and has nothing else to set: the command, in words
 function launchSolo(a) {
   const b = el("button", "field solo import launch-solo");
   b.type = "button";
-  b.title = t("{name} takes magpie only from its environment · click to copy the command that starts it:", { name: a.name }) + "\n" + a.launch;
+  b.title = t("{name} takes Echo only from its environment · click to copy the command that starts it:", { name: a.name }) + "\n" + a.launch;
   b.append(icon("magpie"), el("span", "v empty", t("Copy launch command")));
   const c = el("span", "chev");
   c.append(svg(LAUNCH_GLYPH, 11, 1.5));
   b.append(c);
   b.onclick = (ev) => {
     ev.stopPropagation();
-    copy(a.launch, t("Launch command"), null, t("Copied — run it to start {name} on magpie", { name: a.name }));
+    copy(a.launch, t("Launch command"), null, t("Copied — run it to start {name} on Echo", { name: a.name }));
   };
   return b;
 }
@@ -2756,12 +2756,12 @@ function tierMenu(a) {
   const tiers = a.fields.filter((f) => TIERS.includes(f.label));
   if (!tiers.length || !tiers.some((f) => f.options.length)) return null;
   // Claude Desktop has no model of its own here: a tier unset runs on a
-  // Claude model of that tier magpie serves, else on the chat's model
+  // Claude model of that tier Echo serves, else on the chat's model
   const main = a.fields.find((f) => f.key === "model");
   const mainName = main && (optionFor(main, main.value)?.label || main.value);
   const unset = main ? t("same as model ({model})", { model: mainName }) : t("a Claude model of the tier, else the chat's model");
   // a tier's effort, offered while there are levels to pick (Claude Code
-  // through magpie); unset, the tier runs at the effort Claude Code asks
+  // through Echo); unset, the tier runs at the effort Claude Code asks
   const effortOf = (f) => a.fields.find((e) => e.label === f.label + " effort" && (e.options.length || e.value));
   const level = (e) => e?.value ? effortName(optionFor(e, e.value) || { value: e.value }) : "";
   const custom = tiers.filter((f) => f.value || effortOf(f)?.value);
@@ -2939,11 +2939,11 @@ function updatePath(p) {
   return p + (p.includes("?") ? "&" : "?") + "lang=" + encodeURIComponent(locale);
 }
 
-// renderUpdateBadge shows the header's Update pill once a newer magpie is
-// downloaded (a click restarts into it) or, where magpie can't replace
+// renderUpdateBadge shows the header's Update pill once a newer Echo is
+// downloaded (a click restarts into it) or, where Echo can't replace
 // itself, out (a click opens the release page). The user may keep it away:
 // for good (Settings), or for this version (its ×, or a right-click), until
-// a newer one is out. magpie still downloads it and puts it in on quitting.
+// a newer one is out. Echo still downloads it and puts it in on quitting.
 async function renderUpdateBadge() {
   const b = $("#update"), label = b.querySelector("span");
   const u = await api(updatePath("update")).catch(() => null);
@@ -2991,7 +2991,7 @@ async function renderUpdateBadge() {
   // click, not as "now"
   if (u.state === "ready" && u.waiting) {
     label.textContent = t("Waiting to update");
-    b.title = t("magpie restarts to update to {v} once the agents' requests through the gateway have finished: {busy}. Click to restart now.", { v: u.latest, busy: updateBusyText(u.busy) || "…" });
+    b.title = t("Echo restarts to update to {v} once the agents' requests through the gateway have finished: {busy}. Click to restart now.", { v: u.latest, busy: updateBusyText(u.busy) || "…" });
     b.onclick = () => {
       if (Date.now() - (+b.dataset.armed || 0) < 1500) return;
       b.classList.add("busy");
@@ -3072,11 +3072,11 @@ async function backAsNew(was) {
   }
 }
 
-// updateStuck says why this magpie can't replace itself where it is.
+// updateStuck says why this Echo can't replace itself where it is.
 function updateStuck(u) {
   return u.stuck === "translocated"
-    ? t("macOS is running magpie from a temporary copy, so it can't update itself; move magpie to Applications and open it from there.")
-    : t("magpie is running from its disk image, so it can't update itself; drag it to Applications and open it from there.");
+    ? t("macOS is running Echo from a temporary copy, so it can't update itself; move Echo to Applications and open it from there.")
+    : t("Echo is running from its disk image, so it can't update itself; drag it to Applications and open it from there.");
 }
 
 // ---------- what's new ----------
@@ -3087,7 +3087,7 @@ function updateStuck(u) {
 // that one's notes first.
 const ISSUES = "https://github.com/yetone/magpie/issues/";
 let whatsNewAsked = false;
-// cliBehindOnce: the terminal's magpie is a copied file rather than the
+// cliBehindOnce: the terminal's Echo is a copied file rather than the
 // installer's link, so it can't follow the app's updates (#531's lesson: a
 // stale command wedged the WebDAV sync). The window can't tell a stale copy
 // from a current one — that would mean running the old binary, whose
@@ -3101,9 +3101,9 @@ function cliBehindOnce() {
   if (!state?.cliBehind) return;
   const ed = el("div", "editor");
   const head = el("div", "ehead");
-  head.append(el("b", "", t("The `magpie` command is a copy")));
+  head.append(el("b", "", t("The `Echo` command is a copy")));
   ed.append(head);
-  ed.append(el("p", "lib-confirm", t("The `magpie` command at {path} is a copied file, not the installer's link to the app: it won't follow the app's updates, and an old copy can break what a new one fixed. Re-run the installer, or link it by hand.", { path: state.cliBehind })));
+  ed.append(el("p", "lib-confirm", t("The `Echo` command at {path} is a copied file, not the installer's link to the app: it won't follow the app's updates, and an old copy can break what a new one fixed. Re-run the installer, or link it by hand.", { path: state.cliBehind })));
   const bar = el("div", "bar");
   const quiet = el("button", "text", t("Hide until the next version"));
   quiet.onclick = async (e) => {
@@ -3430,11 +3430,11 @@ function oneRowPerModel(options, cur) {
   return options.filter((o) => !gone.has(o));
 }
 
-// foldSame: magpie's rows for the very account the agent is signed in to
-// itself (Claude Code's Claude subscription, added in magpie too) are the
+// foldSame: Echo's rows for the very account the agent is signed in to
+// itself (Claude Code's Claude subscription, added in Echo too) are the
 // agent's own models a second time; they fold into one row that a click
 // opens, for the few who want them (failover to more accounts, a fix that
-// only magpie's way has). The value set stays a row of its own (#496). The
+// only Echo's way has). The value set stays a row of its own (#496). The
 // row comes after the agent's own rows of its group: the account is listed
 // after the providers the user added, and in its place the group was
 // headed twice. A query shows every row it finds, for Enter to pick.
@@ -3444,7 +3444,7 @@ function foldSame(items) {
   if (!same.length) return items;
   const first = same[0];
   const row = { fold: true, open: !!pick.unfold, n: same.length, group: first.group, icon: first.icon,
-    account: (first.note || "").replace(/ · via magpie$/, "") };
+    account: (first.note || "").replace(/ · via Echo$/, "") };
   const out = items.filter((o) => !same.includes(o));
   const own = out.findLastIndex((o) => o.group === first.group);
   out.splice(own >= 0 ? own + 1 : items.indexOf(first), 0, row, ...(pick.unfold ? same : []));
@@ -3477,7 +3477,7 @@ function openPicker(agent, field, anchor, ev, only) {
   const i = options.findIndex((o) => o.value === cur);
   if (!effortPicker && !field.menu && i > 0) { const [c] = options.splice(i, 1); options.unshift({ ...c, group: "" }); }
   else if (i < 0 && cur && !only) options.unshift({ value: cur, note: t("current value") });
-  // the agent's own default: magpie's wiring comes out and the key is removed
+  // the agent's own default: Echo's wiring comes out and the key is removed
   if (FOLLOWS_MODEL.includes(field.label)) {
     const main = agent.fields.find((f) => f.key === "model");
     options.unshift(main ? { value: "", label: t("Same as model"), note: optionFor(main, main.value)?.label || main.value, icon: optionFor(main, main.value)?.icon, reset: true }
@@ -3493,10 +3493,10 @@ function openPicker(agent, field, anchor, ev, only) {
     options.unshift({ value: "", label: t("Default"), note: t(note, { agent: agent.name, field: t(field.label) }), icon: agent.icon, reset: true });
   }
   // Default is the agent as installed; this is the agent as it was before
-  // magpie, beside it so the two aren't taken for each other
+  // Echo, beside it so the two aren't taken for each other
   if (agent.wired && field.key === "model" && !only && !field.menu && !field.onPick) {
     const at = options.findIndex((o) => !o.reset);
-    options.splice(at < 0 ? options.length : at, 0, { value: "\0disconnect", label: t("Disconnect from magpie"), note: t("put back what {agent} had before magpie", { agent: agent.name }), svg: UNPLUG, reset: true, run: () => askDisconnect(agent) });
+    options.splice(at < 0 ? options.length : at, 0, { value: "\0disconnect", label: t("Disconnect from Echo"), note: t("put back what {agent} had before Echo", { agent: agent.name }), svg: UNPLUG, reset: true, run: () => askDisconnect(agent) });
   }
   const modelPicker = ["model", "small", "large", MEMORIES, "executor", "planner", ...FOLLOWS_MODEL].includes(field.label) && !only;
   pick = { agent, field, options, anchor, cursor: 0, free: !only && !field.menu, modelPicker, effortPicker, groupFilter: "all" };
@@ -3536,7 +3536,7 @@ const EFFORT_ORDER = ["off", "none", "minimal", "low", "medium", "high", "xhigh"
 
 // effortStops are an effort field's options with its value among them when
 // it isn't one, as the panel's slider has its stops: a level in its place
-// (max above high), anything else — unset, auto, one magpie doesn't know —
+// (max above high), anything else — unset, auto, one Echo doesn't know —
 // first.
 function effortStops(f) {
   const options = f?.options || [];
@@ -3912,25 +3912,25 @@ function contextTag(n, name) {
 }
 
 // pathTag: an agent's model picker says by each model whether the agent
-// asks it through magpie or of its own vendor directly (Claude Code on its
+// asks it through Echo or of its own vendor directly (Claude Code on its
 // own sign-in), and its Default, while it is connected, that it takes the
-// agent off magpie. Every agent's picker says it so, in one tag the note's
-// ellipsis can't cut off: the others' "· via magpie" ended their notes,
+// agent off Echo. Every agent's picker says it so, in one tag the note's
+// ellipsis can't cut off: the others' "· via Echo" ended their notes,
 // where Claude Code's was a tag (EZN7L2C3, #834). Codex's own models,
-// through magpie while it is routed, say so too (via); Codex's, Grok
+// through Echo while it is routed, say so too (via); Codex's, Grok
 // Build's and Antigravity CLI's own said nothing at all
 function pathTag(o) {
   if (!pick?.agent || o.custom || o.run) return null;
   let tag = null;
   if (o.ref || o.via) {
-    tag = el("span", "badge path via", t("via magpie"));
-    tag.title = t("{agent} asks magpie for it", { agent: pick.agent.name });
+    tag = el("span", "badge path via", t("via Echo"));
+    tag.title = t("{agent} asks Echo for it", { agent: pick.agent.name });
   } else if (o.direct) {
-    tag = el("span", "badge path direct", t("direct, not via magpie"));
-    tag.title = t("straight to {vendor}, not through magpie", { vendor: o.direct });
+    tag = el("span", "badge path direct", t("direct, not via Echo"));
+    tag.title = t("straight to {vendor}, not through Echo", { vendor: o.direct });
   } else if (o.reset && o.value === "" && leavesMagpie(pick.agent, pick.field, "", o)) {
-    tag = el("span", "badge path direct", t("off magpie"));
-    tag.title = t("{agent} as installed: magpie's endpoint and models come out", { agent: pick.agent.name });
+    tag = el("span", "badge path direct", t("off Echo"));
+    tag.title = t("{agent} as installed: Echo's endpoint and models come out", { agent: pick.agent.name });
   }
   return tag;
 }
@@ -3950,7 +3950,7 @@ function renderList() {
     li.dataset.i = idx;
     if (hasIcons) li.append(optionIcon(o));
     const words = el("span", "option-words");
-    // a choice of magpie's own (Codex's sign-in) reads in the page's language
+    // a choice of Echo's own (Codex's sign-in) reads in the page's language
     const own = pick.field.label === "sign-in";
     words.append(el("span", "v", own ? t(o.label || o.value) : o.label || o.value));
     if (o.free || (pick.modelPicker && o.value && namedFree(o.value, o.label))) words.append(freeBadge(o.free));
@@ -3960,11 +3960,11 @@ function renderList() {
     if (ctx) words.append(ctx);
     let note = o.note && o.note !== (o.label || o.value) ? (own ? t(o.note) : o.note) : "";
     // which way the model goes, as a tag the note's ellipsis can't cut
-    // off: "· via magpie" ended a long note (an account's e-mail), and
+    // off: "· via Echo" ended a long note (an account's e-mail), and
     // Claude Code's own models said nothing, so an Opus asked of Anthropic
-    // directly and a Sonnet through magpie looked alike (#726)
+    // directly and a Sonnet through Echo looked alike (#726)
     const path = pathTag(o);
-    if (path) { words.append(path); note = note.replace(/(^| · )via magpie$/, ""); }
+    if (path) { words.append(path); note = note.replace(/(^| · )via Echo$/, ""); }
     if (q && o.group && !note) note = o.group;
     // a note cut off by its ellipsis (the other groups a model is in,
     // #907) reads whole on hover
@@ -4049,7 +4049,7 @@ function fastTag() {
 }
 
 // foldRow: the one row the models on the agent's own account through
-// magpie fold into (foldSame), opened or closed at a click
+// Echo fold into (foldSame), opened or closed at a click
 function foldRow(o, idx, hasIcons) {
   const li = el("li", "fold" + (o.open ? " open" : "") + (idx === pick.cursor ? " sel" : ""));
   li.dataset.i = idx;
@@ -4057,13 +4057,13 @@ function foldRow(o, idx, hasIcons) {
   li.setAttribute("aria-expanded", String(o.open));
   if (hasIcons) li.append(optionIcon(o));
   const words = el("span", "option-words");
-  words.append(el("span", "v", t(o.n === 1 ? "{n} model via magpie" : "{n} models via magpie", { n: o.n })));
+  words.append(el("span", "v", t(o.n === 1 ? "{n} model via Echo" : "{n} models via Echo", { n: o.n })));
   words.append(el("span", "n", o.account ? t("{account} · the account {agent} is signed in to", { account: o.account, agent: pick.agent.name }) : t("the account {agent} is signed in to", { agent: pick.agent.name })));
   li.append(words);
   const chev = el("span", "chev");
   chev.append(svg("m6 4 4 4-4 4", 12, 1.6));
   li.append(chev);
-  li.title = t(o.open ? "Fold them away again" : "The same models as {agent}'s own, through magpie: click to show them", { agent: pick.agent.name });
+  li.title = t(o.open ? "Fold them away again" : "The same models as {agent}'s own, through Echo: click to show them", { agent: pick.agent.name });
   li.onmousemove = () => { if (pick.cursor !== idx) { pick.cursor = idx; renderList(); } };
   // the filter keeps the keys: the picker stays open, and the arrows,
   // Enter and Esc go on working
@@ -4123,7 +4123,7 @@ async function commit(value) {
     return;
   }
   closePicker();
-  if (opt?.run) return opt.run(); // an act rather than a value (Disconnect from magpie)
+  if (opt?.run) return opt.run(); // an act rather than a value (Disconnect from Echo)
   if (field.onPick) return field.onPick(value, opt); // a picker opened for something other than an agent's setting
   if (field.menu) {
     // a tier chosen from the tiers menu: now its model
@@ -4133,7 +4133,7 @@ async function commit(value) {
   }
   if (value === field.value) return;
   if (agent.native) return setPick(agent, field, value, opt);
-  // a pick that takes a connected agent off magpie (its Default, or a
+  // a pick that takes a connected agent off Echo (its Default, or a
   // model of its own asked of its vendor directly) is asked first, as the
   // switch's off is: it moved Claude Code under Not set up at a click
   // (#726)
@@ -4142,10 +4142,10 @@ async function commit(value) {
 }
 
 // leavesMagpie: picking value in field takes the connected agent off
-// magpie: its Default in the field it is connected through (Set("") takes
-// out what magpie wired in), or a model of its own it asks its vendor for
+// Echo: its Default in the field it is connected through (Set("") takes
+// out what Echo wired in), or a model of its own it asks its vendor for
 // directly (Claude Code's own, which unroutes it). From one of its own
-// models already, the pick doesn't move it off magpie.
+// models already, the pick doesn't move it off Echo.
 function leavesMagpie(a, field, value, opt) {
   if (a?.native || !a?.wired || !connectable(a)) return false;
   // Reasonix restores each role separately; either role can keep its provider.
@@ -4159,22 +4159,22 @@ function leavesMagpie(a, field, value, opt) {
 
 // askLeave: what such a pick does, and the way back, before it is made.
 // Default isn't Disconnect: it leaves the agent as installed, where
-// Disconnect puts back what it had before magpie, so both are offered.
+// Disconnect puts back what it had before Echo, so both are offered.
 function askLeave(a, field, value, opt) {
   const model = opt?.label || value;
   const ed = el("div", "editor disconnect-ask leave-ask");
   const head = el("div", "ehead");
-  head.append(icon(a.icon), el("b", "", t("Take {agent} off magpie?", { agent: a.name })));
+  head.append(icon(a.icon), el("b", "", t("Take {agent} off Echo?", { agent: a.name })));
   ed.append(head);
   ed.append(el("p", "lib-confirm", value === "" && a.id === "reasonix"
-    ? t("Restores {agent}'s previous {field} selection. Magpie's provider and private credential are removed when neither executor nor planner uses them.", { agent: a.name, field: t(field.label) })
+    ? t("Restores {agent}'s previous {field} selection. Echo's provider and private credential are removed when neither executor nor planner uses them.", { agent: a.name, field: t(field.label) })
     : value === ""
-    ? t("Default is {agent} as installed: magpie's endpoint and models come out, and {agent} starts on its own default model. What it had before magpie isn't put back; Disconnect and restore does that.", { agent: a.name })
-    : t("{model} is {agent}'s own model: {agent} asks {vendor} for it itself, with its own sign-in, not through magpie. Picking it takes {agent} off magpie, and it starts on {model}.", { agent: a.name, model, vendor: opt.direct })));
+    ? t("Default is {agent} as installed: Echo's endpoint and models come out, and {agent} starts on its own default model. What it had before Echo isn't put back; Disconnect and restore does that.", { agent: a.name })
+    : t("{model} is {agent}'s own model: {agent} asks {vendor} for it itself, with its own sign-in, not through Echo. Picking it takes {agent} off Echo, and it starts on {model}.", { agent: a.name, model, vendor: opt.direct })));
   const others = state.agents.some((x) => x.id !== a.id && onMagpie(x) && !isHidden(x));
   ed.append(el("p", "lib-confirm", others
-    ? t("「接入」 goes off, and {agent} is listed under Not set up with the agents not connected. Switch it on again to go back through magpie.", { agent: a.name })
-    : t("「接入」 goes off. Switch it on again to go back through magpie.")));
+    ? t("「接入」 goes off, and {agent} is listed under Not set up with the agents not connected. Switch it on again to go back through Echo.", { agent: a.name })
+    : t("「接入」 goes off. Switch it on again to go back through Echo.")));
   const bar = el("div", "bar");
   const go = el("button", "text primary", value === "" ? t("Use default") : t("Use {model}", { model }));
   go.onclick = (e) => { e.stopPropagation(); closeConfirmAsk(); setPick(a, field, value, opt); };
@@ -4196,7 +4196,7 @@ function askLeave(a, field, value, opt) {
 
 // setPick writes a value picked for an agent's field
 async function setPick(agent, field, value, opt) {
-  // The pick shows at once: the row is drawn with it before magpie has
+  // The pick shows at once: the row is drawn with it before Echo has
   // written the config and answered with the whole state, which can take
   // seconds (every agent's lists are read again for it). The answer then
   // draws what the config really says; a refused pick puts the old one back.
@@ -4243,8 +4243,8 @@ async function setPick(agent, field, value, opt) {
     flash();
     const shown = opt?.label || value;
     if (state.notice) status(`${agent.name} → ${shown}. ${t(state.notice)}`, "warn", 9000);
-    else if (leaving && value === "") status(t(agent.id === "reasonix" ? "{agent} no longer goes through magpie; its own settings are back" : "{agent} no longer goes through magpie · on its own default", { agent: agent.name }), "ok", 6000);
-    else if (opt?.direct) status(`${agent.name} ${t(field.label)} → ${shown} · ${t("straight to {vendor}, not through magpie", { vendor: opt.direct })}`, "ok", 6000);
+    else if (leaving && value === "") status(t(agent.id === "reasonix" ? "{agent} no longer goes through Echo; its own settings are back" : "{agent} no longer goes through Echo · on its own default", { agent: agent.name }), "ok", 6000);
+    else if (opt?.direct) status(`${agent.name} ${t(field.label)} → ${shown} · ${t("straight to {vendor}, not through Echo", { vendor: opt.direct })}`, "ok", 6000);
     else status(`${agent.name} ${t(field.label)} → ${shown}`, "ok");
     if (providers) loadProviders();
   } catch (e) {
@@ -4325,7 +4325,7 @@ function profileLibrary(l) {
 
 // profilePending are the profiles a save, update, delete or use is on its
 // way for. What the click does shows at once — the chip saved is there, the
-// one deleted gone, the name field closed — rather than when magpie has read
+// one deleted gone, the name field closed — rather than when Echo has read
 // every agent again for the answer: that took seconds, and a Save or × that
 // changed nothing for that long looked broken. An error puts the list back.
 const profilePending = new Set();
@@ -4334,7 +4334,7 @@ async function profileAction(action, name, update) {
   const before = state.profiles;
   if (action === "delete") state.profiles = before.filter((p) => p.name !== name);
   else if (action === "save" && !before.some((p) => p.name === name)) {
-    // where magpie will list it: by name, as Go's sort.Strings has them
+    // where Echo will list it: by name, as Go's sort.Strings has them
     state.profiles = [...before, { name, summary: "" }].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   }
   if (action !== "delete") profilePending.add(name);
@@ -4755,7 +4755,7 @@ async function switchProvider(p, on, s) {
 }
 
 // renderFileError: over the list, that providers.json is there but can't
-// be read, so the list is the signed-in accounts alone: magpie left the
+// be read, so the list is the signed-in accounts alone: Echo left the
 // file as it is, and nothing is saved over it until it is fixed or moved.
 function renderFileError() {
   const box = $("#fileError");
@@ -4768,7 +4768,7 @@ function renderFileError() {
   r.append(el("span", "mark", "!"));
   const tt = el("span", "tt");
   tt.append(el("span", "n", t("Your providers file can't be read")),
-    el("span", "s", t("magpie left it unchanged and lists no providers from it. Fix the file or move it aside, then reopen this page; until then, changes to providers are refused.")),
+    el("span", "s", t("Echo left it unchanged and lists no providers from it. Fix the file or move it aside, then reopen this page; until then, changes to providers are refused.")),
     el("span", "s", providers.fileError));
   r.append(tt);
   box.append(r);
@@ -4776,10 +4776,10 @@ function renderFileError() {
 
 // DEPRECATED_WHY: why a built-in subscription a community plugin can run
 // is deprecated, said wherever it is marked so.
-const DEPRECATED_WHY = "Some subscriptions are reached in ways their vendors' terms may not allow. So that magpie itself isn't banned over them, subscription providers are being decoupled from magpie and run by community plugins instead.";
+const DEPRECATED_WHY = "Some subscriptions are reached in ways their vendors' terms may not allow. So that Echo itself isn't banned over them, subscription providers are being decoupled from Echo and run by community plugins instead.";
 // deprecatedSub: a built-in subscription with a plugin, not moved onto it
 const deprecatedSub = (agent) => (providers?.movable || []).includes(agent) && !movedSub(agent);
-// unusedSub: a deprecated built-in with no account in magpie, which the
+// unusedSub: a deprecated built-in with no account in Echo, which the
 // add sheet leaves to the Plugins page
 const unusedSub = (agent) => deprecatedSub(agent) && !(providers?.providers || []).some((p) => p.account?.agent === agent);
 // replacedSub: a deprecated built-in whose plugin is installed and serves
@@ -4831,7 +4831,7 @@ function renderMovable() {
   box.append(card);
 }
 
-// Sign-ins magpie found but leaves alone, so nobody wonders why an agent that
+// Sign-ins Echo found but leaves alone, so nobody wonders why an agent that
 // is clearly logged in is not in the list: the ones the user removed.
 function renderExcluded() {
   const box = $("#excluded");
@@ -4848,7 +4848,7 @@ function renderExcluded() {
       quiet.title = t("Hide this line; Add a provider still offers it back");
       quiet.onclick = () => providerAction("quiet", { id: x.provider });
       const out = el("button", "link", t("Sign out"));
-      out.title = t("magpie signs out the accounts it keeps for {name}; adding it again signs in afresh", { name: x.agentName });
+      out.title = t("Echo signs out the accounts it keeps for {name}; adding it again signs in afresh", { name: x.agentName });
       out.onclick = () => askForgetAccount(x);
       r.lastChild.append(" ", back, " · ", quiet, " · ", out);
     }
@@ -4856,7 +4856,7 @@ function renderExcluded() {
     // its saved accounts nowhere else, so this is where they are removed
     if (x.signedOut && x.users?.length) {
       const rm = el("button", "link", t("Remove"));
-      rm.title = t("magpie forgets the accounts it saved; {agent}'s own files are left as they are", { agent: x.agentName });
+      rm.title = t("Echo forgets the accounts it saved; {agent}'s own files are left as they are", { agent: x.agentName });
       rm.onclick = () => askForgetSaved(x);
       r.lastChild.append(" ", rm);
     }
@@ -4864,8 +4864,8 @@ function renderExcluded() {
   }
 }
 
-// askForgetSaved asks before magpie drops the accounts it saved of an agent
-// signed out here, as a reset asks; it forgets only magpie's copies, never
+// askForgetSaved asks before Echo drops the accounts it saved of an agent
+// signed out here, as a reset asks; it forgets only Echo's copies, never
 // the agent's own files or keychain. It is the reset's dialog, so the
 // backdrop and Escape close it the same way.
 function askForgetSaved(x) {
@@ -4873,7 +4873,7 @@ function askForgetSaved(x) {
   const head = el("div", "ehead");
   head.append(icon(x.agentIcon), el("b", "", t(x.users.length === 1 ? "Remove {agent}'s saved account?" : "Remove {agent}'s {n} saved accounts?", { agent: x.agentName, n: x.users.length })));
   ed.append(head);
-  ed.append(el("p", "lib-confirm", t("magpie forgets its copy of {users}. {agent}'s own files and sign-in, and the account itself, are left as they are.", { users: x.users.join(", "), agent: x.agentName })));
+  ed.append(el("p", "lib-confirm", t("Echo forgets its copy of {users}. {agent}'s own files and sign-in, and the account itself, are left as they are.", { users: x.users.join(", "), agent: x.agentName })));
   const bar = el("div", "bar");
   const go = el("button", "text primary danger-fill", t("Remove"));
   go.onclick = async (e) => {
@@ -4900,16 +4900,16 @@ function askForgetSaved(x) {
   cancel.focus();
 }
 
-// askForgetAccount asks before magpie signs a removed account out for
-// good: what magpie keeps of its sign-ins goes, so adding it again signs in
+// askForgetAccount asks before Echo signs a removed account out for
+// good: what Echo keeps of its sign-ins goes, so adding it again signs in
 // afresh rather than bringing the old account back (#694). The vendor's
 // account itself is left as it is.
 function askForgetAccount(x) {
   const ed = el("div", "editor forget-ask");
   const head = el("div", "ehead");
-  head.append(icon(x.agentIcon), el("b", "", t("Sign {name} out of magpie?", { name: x.agentName })));
+  head.append(icon(x.agentIcon), el("b", "", t("Sign {name} out of Echo?", { name: x.agentName })));
   ed.append(head);
-  ed.append(el("p", "lib-confirm", t("magpie signs out the accounts it keeps for {name} and forgets them; adding {name} again signs in afresh. The account itself is left as it is.", { name: x.agentName })));
+  ed.append(el("p", "lib-confirm", t("Echo signs out the accounts it keeps for {name} and forgets them; adding {name} again signs in afresh. The account itself is left as it is.", { name: x.agentName })));
   // the one Codex is signed in to goes last, and Codex with it (ForgetLogin)
   if (x.agent === "codex") ed.append(el("p", "lib-confirm", t("Codex itself is signed out too, as codex logout does.")));
   const bar = el("div", "bar");
@@ -4934,7 +4934,7 @@ function askForgetAccount(x) {
 }
 
 // askSignOutLogin asks before Codex is signed out of its only account, as
-// codex logout does: its sign-in file goes and magpie forgets the account.
+// codex logout does: its sign-in file goes and Echo forgets the account.
 // It is the reset's dialog, so the backdrop and Escape close it the same way,
 // back to the provider's editor it was asked from.
 function askSignOutLogin(a, l) {
@@ -4942,7 +4942,7 @@ function askSignOutLogin(a, l) {
   const head = el("div", "ehead");
   head.append(icon(a.agentIcon), el("b", "", t("Sign {agent} out of {user}?", { agent: a.agentName, user: l.user })));
   ed.append(head);
-  ed.append(el("p", "lib-confirm", t("{agent} is signed out, as codex logout does, and magpie forgets the account. Sign in again to use it; an open {agent} may need quitting and opening again. The account itself is left as it is.", { agent: a.agentName })));
+  ed.append(el("p", "lib-confirm", t("{agent} is signed out, as codex logout does, and Echo forgets the account. Sign in again to use it; an open {agent} may need quitting and opening again. The account itself is left as it is.", { agent: a.agentName })));
   const bar = el("div", "bar");
   const go = el("button", "text primary danger-fill", t("Sign out"));
   go.onclick = async (e) => {
@@ -5001,7 +5001,7 @@ function accountPlan(a) {
 // page that gets anything else connected to it: base URL, key, model ids,
 // and a snippet in whichever language the reader is holding.
 
-// copy asks magpie to put text on the clipboard, as the page's own
+// copy asks Echo to put text on the clipboard, as the page's own
 // clipboard API is refused inside the app's window; a browser tab on the
 // dev UI falls back to it. A tab on `magpie web` reached over plain http
 // from another computer (a NAS's) has no clipboard API at all, so the
@@ -5119,10 +5119,10 @@ function renderGatewayView() {
 }
 
 // The status card's button (leslie_luo on Discord: told to quit the older
-// magpie serving the gateway, with no way to tell which one it was): with
-// an older magpie on the port it quits that one, checked to be magpie by
+// Echo serving the gateway, with no way to tell which one it was): with
+// an older Echo on the port it quits that one, checked to be Echo by
 // its process, and this one serves the gateway at once; otherwise it
-// restarts the gateway this one serves, or starts it. A magpie of this
+// restarts the gateway this one serves, or starts it. A Echo of this
 // version or newer serving it gets none: that one is not to be quit here.
 // What stood in the way stays under it until the gateway's state changes.
 let gatewayFix = { busy: false, err: "", when: "" };
@@ -5132,8 +5132,8 @@ function gatewayFixButton(g, older) {
   // bordered: a plain text button read as words on the card in dark mode
   const b = el("button", "text action gw-fix");
   b.textContent = gatewayFix.busy
-    ? (older ? t("Quitting magpie {v}…", { v: g.version }) : t(g.running ? "Restarting the gateway…" : "Starting the gateway…"))
-    : (older ? t("Quit magpie {v} and take over", { v: g.version }) : t(g.running ? "Restart gateway" : "Start gateway"));
+    ? (older ? t("Quitting Echo {v}…", { v: g.version }) : t(g.running ? "Restarting the gateway…" : "Starting the gateway…"))
+    : (older ? t("Quit Echo {v} and take over", { v: g.version }) : t(g.running ? "Restart gateway" : "Start gateway"));
   b.disabled = gatewayFix.busy;
   b.onclick = async () => {
     const when = gatewayFixWhen(g);
@@ -5152,18 +5152,18 @@ function gatewayFixButton(g, older) {
 function gatewayFixSays(o) {
   const p = { port: o.port || "", pid: o.pid || "", path: o.path || "", v: o.version || "", error: o.error || "" };
   switch (o.reason) {
-    case "not-magpie": return t("Port {port} is held by {path} (pid {pid}), which isn't magpie, so magpie leaves it alone. Quit it yourself, or move the gateway to another port in Settings.", p);
-    // leslie_luo on Discord: an old magpie in OrbStack, its helper named
+    case "not-magpie": return t("Port {port} is held by {path} (pid {pid}), which isn't Echo, so Echo leaves it alone. Quit it yourself, or move the gateway to another port in Settings.", p);
+    // leslie_luo on Discord: an old Echo in OrbStack, its helper named
     // as the program to quit
-    case "container": return t("Port {port} is forwarded by {path} (pid {pid}) to a container or a VM: the magpie {v} answering there runs inside it, out of this magpie's reach. Stop that container (docker ps lists it, docker stop <name> stops it, or stop it in OrbStack or Docker Desktop), or move this magpie's gateway to another port in Settings.", p);
-    case "unseen": return t("magpie can't see which process holds port {port}: it runs as another user or as administrator. Quit it there.", p);
-    case "denied": return t("magpie {v} (pid {pid}, {path}) runs as another user or as administrator, so this magpie can't quit it. Quit it there.", p);
-    case "stuck": return t("magpie {v} (pid {pid}) didn't quit. End it in your system's process list (Activity Monitor, Task Manager).", p);
-    case "respawned": return t("Something started magpie on port {port} again at once ({path}, pid {pid}): a login item or a service keeps it running (a LaunchAgent, a systemd unit, a scheduled task). Remove that, then try again.", p);
+    case "container": return t("Port {port} is forwarded by {path} (pid {pid}) to a container or a VM: the Echo {v} answering there runs inside it, out of this Echo's reach. Stop that container (docker ps lists it, docker stop <name> stops it, or stop it in OrbStack or Docker Desktop), or move this Echo's gateway to another port in Settings.", p);
+    case "unseen": return t("Echo can't see which process holds port {port}: it runs as another user or as administrator. Quit it there.", p);
+    case "denied": return t("Echo {v} (pid {pid}, {path}) runs as another user or as administrator, so this Echo can't quit it. Quit it there.", p);
+    case "stuck": return t("Echo {v} (pid {pid}) didn't quit. End it in your system's process list (Activity Monitor, Task Manager).", p);
+    case "respawned": return t("Something started Echo on port {port} again at once ({path}, pid {pid}): a login item or a service keeps it running (a LaunchAgent, a systemd unit, a scheduled task). Remove that, then try again.", p);
     case "taken": return p.pid
       ? t("Port {port} is in use by {path} (pid {pid}): quit it, or move the gateway to another port in Settings.", p)
       : t("Port {port} is in use by another program: quit it, or move the gateway to another port in Settings.", p);
-    case "other": return t("magpie {v} serves the gateway, and it isn't older than this one: quit it there to serve the gateway here.", p);
+    case "other": return t("Echo {v} serves the gateway, and it isn't older than this one: quit it there to serve the gateway here.", p);
   }
   return t("The gateway couldn't be served here: {error}", p);
 }
@@ -5173,23 +5173,23 @@ function renderGateway() {
   const g = providers.gateway;
   const box = $("#gateway");
   box.replaceChildren();
-  // an older magpie keeping the port sends every agent's request its own
+  // an older Echo keeping the port sends every agent's request its own
   // way, without this version's fixes (#506): said in place of the counts
   const older = g.running && !g.mine && g.older;
   const dot = el("span", "dot " + (older ? "old" : g.running ? "on" : ""));
   const who = el("div", "who");
   const name = el("div", "name", t("Gateway"));
   name.append(el("span", "state", older
-    ? t("running · served by magpie {v}, older than this one", { v: g.version })
-    : t(g.running ? (g.mine ? "running" : "running · served by another magpie") : "not running")));
+    ? t("running · served by Echo {v}, older than this one", { v: g.version })
+    : t(g.running ? (g.mine ? "running" : "running · served by another Echo") : "not running")));
   const routed = new Set();
   for (const p of providers.providers) for (const a of p.agents) if (a.current) routed.add(a.id);
   const n = routed.size;
   if (older) {
-    who.append(name, el("div", "sub old", t("Agents' requests go through magpie {v} and are sent as it sends them, without this version's fixes. Quit it here and this one serves the gateway at once.", { v: g.version })));
+    who.append(name, el("div", "sub old", t("Agents' requests go through Echo {v} and are sent as it sends them, without this version's fixes. Quit it here and this one serves the gateway at once.", { v: g.version })));
   } else who.append(name, el("div", "sub", g.running
     ? [t(g.models === 1 ? "{n} model" : "{n} models", { n: g.models }), n ? t(n === 1 ? "{n} agent routed through it" : "{n} agents routed through it", { n }) : t("no agent routed through it yet"), t("five APIs, one URL")].join(" · ")
-    : t("start it with magpie serve, or open magpie at login")));
+    : t("start it with magpie serve, or open Echo at login")));
   const fix = gatewayFixButton(g, older);
   if (fix) who.append(fix);
   if (gatewayFix.err && gatewayFix.when === gatewayFixWhen(g)) who.append(el("div", "sub old err", gatewayFix.err));
@@ -5206,9 +5206,9 @@ const FLAVORS = {
   openai: {
     name: "OpenAI", base: (u) => u + "/v1", baseEnv: "OPENAI_BASE_URL", keyEnv: "OPENAI_API_KEY",
     note: "Chat Completions, the API most tools speak. Anything with an OpenAI base-URL setting works.",
-    curl: (b, m, k = "magpie") => ({ url: `${b}/chat/completions`, headers: [`Authorization: Bearer ${k}`],
+    curl: (b, m, k = "Echo") => ({ url: `${b}/chat/completions`, headers: [`Authorization: Bearer ${k}`],
       body: `{"model": "${m}",\n "messages": [{"role": "user", "content": "hi"}]}` }),
-    python: (b, m, k = "magpie") => `from openai import OpenAI
+    python: (b, m, k = "Echo") => `from openai import OpenAI
 
 client = OpenAI(base_url="${b}", api_key="${k}")
 r = client.chat.completions.create(
@@ -5216,7 +5216,7 @@ r = client.chat.completions.create(
     messages=[{"role": "user", "content": "hi"}],
 )
 print(r.choices[0].message.content)`,
-    node: (b, m, k = "magpie") => `import OpenAI from "openai";
+    node: (b, m, k = "Echo") => `import OpenAI from "openai";
 
 const client = new OpenAI({ baseURL: "${b}", apiKey: "${k}" });
 const r = await client.chat.completions.create({
@@ -5228,14 +5228,14 @@ console.log(r.choices[0].message.content);`,
   responses: {
     name: "Responses", base: (u) => u + "/v1", baseEnv: "OPENAI_BASE_URL", keyEnv: "OPENAI_API_KEY",
     note: "OpenAI's newer API: reasoning, built-in tool items, encrypted reasoning. Codex speaks this.",
-    curl: (b, m, k = "magpie") => ({ url: `${b}/responses`, headers: [`Authorization: Bearer ${k}`],
+    curl: (b, m, k = "Echo") => ({ url: `${b}/responses`, headers: [`Authorization: Bearer ${k}`],
       body: `{"model": "${m}", "input": "hi"}` }),
-    python: (b, m, k = "magpie") => `from openai import OpenAI
+    python: (b, m, k = "Echo") => `from openai import OpenAI
 
 client = OpenAI(base_url="${b}", api_key="${k}")
 r = client.responses.create(model="${m}", input="hi")
 print(r.output_text)`,
-    node: (b, m, k = "magpie") => `import OpenAI from "openai";
+    node: (b, m, k = "Echo") => `import OpenAI from "openai";
 
 const client = new OpenAI({ baseURL: "${b}", apiKey: "${k}" });
 const r = await client.responses.create({ model: "${m}", input: "hi" });
@@ -5244,9 +5244,9 @@ console.log(r.output_text);`,
   anthropic: {
     name: "Anthropic", base: (u) => u, baseEnv: "ANTHROPIC_BASE_URL", keyEnv: "ANTHROPIC_API_KEY",
     note: "Messages API. Claude Code reads ANTHROPIC_AUTH_TOKEN instead of the key; the Agents tab sets that for you.",
-    curl: (b, m, k = "magpie") => ({ url: `${b}/v1/messages`, headers: [`x-api-key: ${k}`, "anthropic-version: 2023-06-01"],
+    curl: (b, m, k = "Echo") => ({ url: `${b}/v1/messages`, headers: [`x-api-key: ${k}`, "anthropic-version: 2023-06-01"],
       body: `{"model": "${m}", "max_tokens": 1024,\n "messages": [{"role": "user", "content": "hi"}]}` }),
-    python: (b, m, k = "magpie") => `import anthropic
+    python: (b, m, k = "Echo") => `import anthropic
 
 client = anthropic.Anthropic(
     base_url="${b}", api_key="${k}",
@@ -5257,7 +5257,7 @@ m = client.messages.create(
     messages=[{"role": "user", "content": "hi"}],
 )
 print(m.content[0].text)`,
-    node: (b, m, k = "magpie") => `import Anthropic from "@anthropic-ai/sdk";
+    node: (b, m, k = "Echo") => `import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({ baseURL: "${b}", apiKey: "${k}" });
 const m = await client.messages.create({
@@ -5270,14 +5270,14 @@ console.log(m.content[0].text);`,
   gemini: {
     name: "Gemini", base: (u) => u, baseEnv: "GOOGLE_GEMINI_BASE_URL", keyEnv: "GEMINI_API_KEY",
     note: "Google's generateContent API, v1beta. Gemini CLI and the google-genai SDKs speak this.",
-    curl: (b, m, k = "magpie") => ({ url: `${b}/v1beta/models/${m}:generateContent`, headers: [`x-goog-api-key: ${k}`],
+    curl: (b, m, k = "Echo") => ({ url: `${b}/v1beta/models/${m}:generateContent`, headers: [`x-goog-api-key: ${k}`],
       body: `{"contents": [{"parts": [{"text": "hi"}]}]}` }),
-    python: (b, m, k = "magpie") => `from google import genai
+    python: (b, m, k = "Echo") => `from google import genai
 
 client = genai.Client(api_key="${k}", http_options={"base_url": "${b}"})
 r = client.models.generate_content(model="${m}", contents="hi")
 print(r.text)`,
-    node: (b, m, k = "magpie") => `import { GoogleGenAI } from "@google/genai";
+    node: (b, m, k = "Echo") => `import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({
   apiKey: "${k}",
@@ -5286,15 +5286,15 @@ const ai = new GoogleGenAI({
 const r = await ai.models.generateContent({ model: "${m}", contents: "hi" });
 console.log(r.text);`,
   },
-  // magpie's own System One API (ARNO on Discord: gateway添加system one
+  // Echo's own System One API (ARNO on Discord: gateway添加system one
   // api 有想法吗): a decision model — Jev, Clef, Bailian's — answers typed
   // questions about a state; no SDK speaks it, so no shell variables
   systemone: {
     name: "System One", base: (u) => u + "/v1", decide: true,
     note: "TypeSafe's decision API: a Jev or Clef model answers typed questions (choice, noul, score) about a state, with how sure it is. Clef also reads images: add \"images\": [\"data:image/png;base64,…\"].",
-    curl: (b, m, k = "magpie") => ({ url: `${b}/systemone`, headers: [`Authorization: Bearer ${k}`],
+    curl: (b, m, k = "Echo") => ({ url: `${b}/systemone`, headers: [`Authorization: Bearer ${k}`],
       body: `{"model": "${m}",\n "state": {"message": "My order never arrived, refund it"},\n "questions": {"team": {"type": "choice",\n   "instructions": "Which team should answer the message?",\n   "criteria": {"billing": "Payments and refunds", "shipping": "Deliveries", "other": "Anything else"}}}}` }),
-    python: (b, m, k = "magpie") => `import requests
+    python: (b, m, k = "Echo") => `import requests
 
 r = requests.post("${b}/systemone",
     headers={"Authorization": "Bearer ${k}"},
@@ -5309,7 +5309,7 @@ r = requests.post("${b}/systemone",
     })
 a = r.json()["answers"]["team"]
 print(a["choice"], a["confidence"])`,
-    node: (b, m, k = "magpie") => `const r = await fetch("${b}/systemone", {
+    node: (b, m, k = "Echo") => `const r = await fetch("${b}/systemone", {
   method: "POST",
   headers: { Authorization: "Bearer ${k}", "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -5462,7 +5462,7 @@ function renderConnect() {
     queueMicrotask(() => selectConnectKey(keys[0].id));
   }
   const key = keys.find((k) => k.id === connectKeyID);
-  const secret = key ? (connectSecret?.id === key.id ? connectSecret.secret : "") : remote ? "" : "magpie";
+  const secret = key ? (connectSecret?.id === key.id ? connectSecret.secret : "") : remote ? "" : "Echo";
   const base = f.base(connectURL);
   const fold = $("#foldConnect");
   fold.setAttribute("aria-expanded", String(!connectFolded));
@@ -5489,17 +5489,17 @@ function renderConnect() {
   const options = keys.map((k) => ({ v: k.id, name: k.name, literalName: true, note: k.masked }));
   if (!remote) options.unshift({ v: "", name: "This computer", note: t("Any key · no key attribution") });
   const keyLabel = remote || key ? "Gateway key" : "API key";
-  if (!g.lan) k.append(el("code", "", "magpie"));
+  if (!g.lan) k.append(el("code", "", "Echo"));
   else if (options.length) k.append(connectPick("connectKey", keyLabel, key ? key.name : remote ? t("Choose a gateway key") : t("This computer"),
     options, connectKeyID, selectConnectKey));
   else k.append(el("code", "", t("Create a gateway key above to connect")));
   if (key) k.append(copyCallerKeyBtn(key));
-  else if (!remote) k.append(copyBtn("magpie", t("Key")));
+  else if (!remote) k.append(copyBtn("Echo", t("Key")));
   box.append(...field(t(keyLabel), k, !f.keyEnv ? t(g.lan && (remote || gatewayKeys?.length)
     ? "Choose a gateway key to send as Authorization: Bearer; usage is tracked by key."
     : "Sent as Authorization: Bearer. The gateway trusts everything on loopback, so any value works.") : t(g.lan && (remote || gatewayKeys?.length)
     ? "Choose a gateway key to use as {env}; usage is tracked by key."
-    : "{env}=magpie. The gateway trusts everything on loopback, so any value works.", { env: f.keyEnv })));
+    : "{env}=Echo. The gateway trusts everything on loopback, so any value works.", { env: f.keyEnv })));
 
   const m = el("div", "val");
   m.append(el("code", "", model), copyBtn(model, t("Model id")));
@@ -5522,7 +5522,7 @@ function renderConnect() {
   wrap.append(pre);
   if (secret) wrap.append(copyBtn(code, t("Snippet")));
   ex.append(wrap);
-  box.append(...field(t("Example"), ex, snipLang === "shell" ? t("Put these in the shell (or the tool's settings) and the tool talks to magpie instead of the vendor.") : ""));
+  box.append(...field(t("Example"), ex, snipLang === "shell" ? t("Put these in the shell (or the tool's settings) and the tool talks to Echo instead of the vendor.") : ""));
 }
 
 // A small highlighter for the four snippet dialects: strings, comments,
@@ -5667,10 +5667,10 @@ function modelInfo(m) {
       ? t("Reasoning: {levels} (the levels every model in it has)", { levels: levels.map((l) => t(l)).join(", ") })
       : t("Reasoning: {levels}", { levels: levels.map((l) => t(l)).join(", ") }));
   } else lines.push(t("Reasoning levels: none known"));
-  // nothing read of its images either way: magpie counts it text-only for a
+  // nothing read of its images either way: Echo counts it text-only for a
   // describer (gateway.blindTo), which is not the same as its list saying so,
   // so it is not called text-only here either. Only a model that carries the
-  // flag is unknown; one magpie has an answer for carries no such key at all.
+  // flag is unknown; one Echo has an answer for carries no such key at all.
   const imgUnknown = m.imagesUnknown === true;
   if (m.images) {
     const c = el("span", "badge mi-img");
@@ -6085,7 +6085,7 @@ function renderActivity() {
   const kept = new Map();
   for (const item of box.querySelectorAll(".call-item[data-id]")) kept.set(item.dataset.id, [...item.querySelectorAll("pre")].map((p) => p.scrollTop));
   box.replaceChildren();
-  $("#callsNote").textContent = g.running && !g.mine ? t("shown by the magpie that serves the gateway") : "";
+  $("#callsNote").textContent = g.running && !g.mine ? t("shown by the Echo that serves the gateway") : "";
   const calls = g.calls.slice(0, callsShown);
   if (!calls.length) { box.append(el("div", "none", t("No requests yet. Point an agent at a model, or run the example above; every call shows up here as it happens."))); return; }
   for (const c of calls) {
@@ -6146,7 +6146,7 @@ function modelField(a) {
   const agent = state.agents.find((x) => x.id === a.id);
   return agent?.fields.find((f) => f.key === "model") || null;
 }
-function ofProvider(p) { return new RegExp(`^(magpie/)?${p.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/`); }
+function ofProvider(p) { return new RegExp(`^(Echo/)?${p.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/`); }
 
 // Pick one of this provider's models for an agent, straight from the row.
 function pickForAgent(a, p, btn, ev) {
@@ -6260,7 +6260,7 @@ function renderAdd() {
     const gone = (providers.excluded || []).filter((x) => x.quiet && x.provider && (!f || x.agentName.toLowerCase().includes(f) || x.agent.includes(f)));
     if (gone.length) {
       any = true;
-      const grid = section("Removed from magpie", "still signed in");
+      const grid = section("Removed from Echo", "still signed in");
       for (const x of gone) {
         const r = el("div", "tile removed");
         r.dataset.pick = "removed:" + x.provider; // not the subscription's own row, named alike
@@ -6270,7 +6270,7 @@ function renderAdd() {
         back.title = t("its accounts and model picks as they were");
         back.onclick = (e) => { e.stopPropagation(); providerAction("show", { id: x.provider }, t("{name} added back", { name: x.agentName })); };
         const out = el("button", "text action danger", t("Sign out…"));
-        out.title = t("magpie forgets its accounts; adding it again signs in afresh");
+        out.title = t("Echo forgets its accounts; adding it again signs in afresh");
         out.onclick = (e) => { e.stopPropagation(); askForgetAccount(x); };
         const acts = el("span", "acts");
         acts.append(back, out);
@@ -6336,7 +6336,7 @@ function morePluginsTile(q) {
   const ic = el("span", "puzzle");
   ic.append(svg(PUZZLE, 15, 1.4));
   b.append(ic, nm, svg(CHEV_R, 11, 1.6));
-  b.title = t("Subscriptions magpie doesn't sign in to itself: install a plugin for one in the Plugins tab");
+  b.title = t("Subscriptions Echo doesn't sign in to itself: install a plugin for one in the Plugins tab");
   b.onclick = () => openPlugins(q);
   return b;
 }
@@ -6917,7 +6917,7 @@ function headerEditor(hints = []) {
 function parses(s) { try { JSON.parse(s); return true; } catch { return false; } }
 
 // iconPicker: a custom provider's icon — one of the built-in ones, or a
-// picture of the user's own, which magpie keeps in ~/.config/magpie/icons.
+// picture of the user's own, which Echo keeps in ~/.config/magpie/icons.
 // A routing group's icon: its providers' icons stacked, the first on top,
 // so which providers a group routes over shows at a glance.
 function stackIcon(icons) {
@@ -7351,7 +7351,7 @@ function drawEditor(p, presetID) {
   // more provider of it, under a name and id of its own
   const another = isNew && !!pr?.added;
   // an editor opened afresh has Names & levels folded: it stayed open in
-  // every editor after, until magpie was restarted (Hu9956, #868)
+  // every editor after, until Echo was restarted (Hu9956, #868)
   if (!draft) naming = null;
   draft = draft || (p
     ? draftOf(p)
@@ -7528,7 +7528,7 @@ function drawEditor(p, presetID) {
   };
 
   if (p?.account) {
-    // the sign-in belongs to the agent; magpie only borrows it
+    // the sign-in belongs to the agent; Echo only borrows it
     const a = p.account;
     if (subOf(a.agent)) {
       // no Claude Code on Windows: the gateway runs the one in WSL
@@ -7558,14 +7558,14 @@ function drawEditor(p, presetID) {
     ed.append(...concurrencyField(p));
     ed.append(...priceRateField());
     if (p.cline) ed.append(...upstreamField());
-    // a plugin's provider is reached inside magpie: its plugin:// URLs go
+    // a plugin's provider is reached inside Echo: its plugin:// URLs go
     // nowhere to show or test
     const urls = [p.chat, p.responses, p.anthropic].filter(Boolean);
     if (urls.length && !urls.some((u) => u.startsWith("plugin://"))) ed.append(...field(t("Endpoints"), renderEndpoints(p, p)));
     const bar = el("div", "bar");
-    // removing only hides it from magpie; the agent stays signed in
+    // removing only hides it from Echo; the agent stays signed in
     const del = el("button", "text danger", t("Remove"));
-    del.title = t("{agent} stays signed in; magpie just stops offering it", { agent: a.agentName });
+    del.title = t("{agent} stays signed in; Echo just stops offering it", { agent: a.agentName });
     del.onclick = () => providerAction("delete", { id: p.id }, t("{name} removed", { name: p.name }));
     bar.append(del, el("span", "grow"));
     const cancel = el("button", "text", t("Cancel"));
@@ -7601,7 +7601,7 @@ function drawEditor(p, presetID) {
 
   // a vendor reached at the user's own resource (Azure OpenAI): no URL of
   // the preset's, the one the resource is at is typed or pasted here, and
-  // magpie puts it on the API the preset speaks when it is saved
+  // Echo puts it on the API the preset speaks when it is saved
   let endpoint = null;
   if (pr?.endpoint) {
     if (draft.chat === undefined) { draft.chat = p?.chat || ""; draft.responses = p?.responses || ""; }
@@ -7682,13 +7682,13 @@ function drawEditor(p, presetID) {
   if (p?.cline || (isNew && pr?.id === "clinepass")) ed.append(...upstreamField());
 
   // a relay in front of Anthropic's or OpenAI's API searches the web as
-  // they do, which magpie can't tell from its host (#359): a client's web
-  // search goes to it as sent, rather than through magpie's own. Only its
+  // they do, which Echo can't tell from its host (#359): a client's web
+  // search goes to it as sent, rather than through Echo's own. Only its
   // Anthropic or Responses API can be asked to: a Chat one has no such tool
   if (custom) {
     const [stk, scb] = tick(t("Searches the web by itself"), !!draft.searches);
     scb.onchange = () => { draft.searches = scb.checked; };
-    const row = field(t("Web search"), stk, t("For a relay in front of Anthropic's or OpenAI's own API: Claude Code's WebSearch and Codex's web_search go to it as they were sent, not through magpie's search. magpie doesn't automatically search with it for other models, but you can name it as the searcher."));
+    const row = field(t("Web search"), stk, t("For a relay in front of Anthropic's or OpenAI's own API: Claude Code's WebSearch and Codex's web_search go to it as they were sent, not through Echo's search. Echo doesn't automatically search with it for other models, but you can name it as the searcher."));
     showSearch = () => { for (const e of row) e.style.display = searchable() ? "" : "none"; };
     showSearch();
     ed.append(...row);
@@ -7729,8 +7729,8 @@ function drawEditor(p, presetID) {
 
   // StepFun tells a Step Plan's 5-hour, weekly and credit windows only to
   // its platform's sign-in, never to a key: signed in once in a window of
-  // magpie's, the Usage page shows them
-  if (p?.stepPlan) ed.append(...field(t("Step Plan allowances"), renderStepPlan(p.stepPlan), t("A key tells only the balance. The Step Plan's 5-hour, weekly and credit windows are told only to a StepFun sign-in: bring yours here once and magpie keeps it (for 30 days), used for nothing else.")));
+  // Echo's, the Usage page shows them
+  if (p?.stepPlan) ed.append(...field(t("Step Plan allowances"), renderStepPlan(p.stepPlan), t("A key tells only the balance. The Step Plan's 5-hour, weekly and credit windows are told only to a StepFun sign-in: bring yours here once and Echo keeps it (for 30 days), used for nothing else.")));
 
   // a key on a team's GLM Coding Plan is told the team's windows only with
   // the team's organization and project, which the console shows (#236)
@@ -7795,7 +7795,7 @@ function drawEditor(p, presetID) {
     const ex = input(draft.extra.join(", "), t("model ids, comma separated · e.g. gpt-5.5, claude-sonnet-5"));
     const pick = addFormModels(ex);
     ex.oninput = () => { draft.extra = ex.value.split(/[,\s]+/).filter(Boolean); pick.draw(); };
-    ed.append(...field(t("Models"), pick.box, t("Optional: Fetch models to pick from the vendor's list, or type ids; none picked, magpie asks for the list after saving.")));
+    ed.append(...field(t("Models"), pick.box, t("Optional: Fetch models to pick from the vendor's list, or type ids; none picked, Echo asks for the list after saving.")));
   }
 
   // Jev's endpoint can be the one its gateway's docs give — Cloudflare's
@@ -8135,7 +8135,7 @@ function fetchImportIcon(p, head, ed) {
 // check. Nothing is saved until they press Add; the key stays hidden unless
 // they ask to see it.
 // Providers other apps (CC Switch, Alma) have set up, for the user to pick
-// from. magpie only reads those apps; the keys stay on the server side and
+// from. Echo only reads those apps; the keys stay on the server side and
 // the dialog sees them masked.
 async function openImportApps() {
   importingApps = { loading: true, sources: [], picks: {} };
@@ -8187,8 +8187,8 @@ function renderImportApps(ia) {
     go.disabled = true;
     return ed;
   }
-  ed.append(el("div", "appnote", t("magpie reads these apps' settings and changes nothing in them. Pick the providers to bring over.")));
-  // one tab per app magpie can import from, so which ones it can is plain
+  ed.append(el("div", "appnote", t("Echo reads these apps' settings and changes nothing in them. Pick the providers to bring over.")));
+  // one tab per app Echo can import from, so which ones it can is plain
   // at a glance; each shows how many providers it has to bring over
   const tabs = el("div", "apptabs");
   tabs.setAttribute("role", "tablist");
@@ -8317,7 +8317,7 @@ function importAppRow(ia, s, it, recount, boxes) {
     if (it.keyOf) opts.push(["key", t("Add as another key")]);
     opts.push(["add", t(it.status === "taken" ? "Keep both" : "Add as a new provider")]);
     if (it.status === "taken") opts.push(["replace", t("Replace it")]);
-    who.append(el("div", "sub", t("magpie has {name} already", { name: it.existing })));
+    who.append(el("div", "sub", t("Echo has {name} already", { name: it.existing })));
     const sg = segs(opts, pick.mode, (m) => { pick.mode = m; if (!pick.on) { pick.on = box.checked = true; recount(); } });
     sg.onclick = (e) => e.preventDefault(); // a click on a choice is not a click on the checkbox
     who.append(sg);
@@ -8382,7 +8382,7 @@ function renderImport(im) {
   if (im.replaces) ed.append(el("div", "warnbox soft", t("Replaces your {name}, key and all.", { name: im.replaces })));
 
   // The link may name the vendor's own logo — an explicit icon= wins over
-  // whatever the catalog or preset gave. magpie fetches it here (the dialog
+  // whatever the catalog or preset gave. Echo fetches it here (the dialog
   // being open is the confirmation), once, quietly, and only ever into its
   // icons folder; the fallback mark stays when it fails.
   if (p.iconUrl) fetchImportIcon(p, h, ed);
@@ -8452,7 +8452,7 @@ function showRest(n, open) {
   return b;
 }
 
-// detectAPIs: which of the APIs magpie speaks to a vendor answer at the base
+// detectAPIs: which of the APIs Echo speaks to a vendor answer at the base
 // URL typed (01huadalang on Discord: 一键检测支持什么协议) — Detect sends
 // each the smallest request there, with the key typed (or the saved one)
 // and a model typed or picked from the vendor's list, and shows what each
@@ -8695,7 +8695,7 @@ function detectAPIs(p, base, use) {
 // (the server's providerJSON.modelTest), in words, or "" when they can
 function modelTestWhy(p) {
   if (p.modelTest === "decide") return t("A classifier's models aren't sent test requests: Test under Endpoints asks Jev's endpoint for them.");
-  if (p.modelTest === "own-api") return t("{name} is reached through its own API, which magpie translates each agent request for, so a test request can't be sent to it on its own. Ask the model from an agent to try it.", { name: p.name });
+  if (p.modelTest === "own-api") return t("{name} is reached through its own API, which Echo translates each agent request for, so a test request can't be sent to it on its own. Ask the model from an agent to try it.", { name: p.name });
   return "";
 }
 
@@ -8957,7 +8957,7 @@ function renderModels(p) {
       const imagesNow = () => prefs[id]?.ownImages ? !!m.ownImages : prefs[id]?.images ?? !!m.images;
       const row = el("div", "mname");
       const name = input(nameNow(), own);
-      name.title = t("The name agents and magpie show for {id}; empty for its own", { id: m.id });
+      name.title = t("The name agents and Echo show for {id}; empty for its own", { id: m.id });
       name.onchange = () => {
         const v = name.value.trim();
         if (v === savedName) delete pref().name; else pref().name = v;
@@ -8967,7 +8967,7 @@ function renderModels(p) {
       const who = el("div", "mwho");
       who.append(name, el("code", "", m.id));
       row.append(who);
-      // the model of other providers' it is, for the routing groups magpie
+      // the model of other providers' it is, for the routing groups Echo
       // finds, when its id is one no rule matches up with theirs
       // (Volcengine's deepseek-v4-1-flash-260910 and others'
       // deepseek-v4.1-flash, #583); empty merges it by its own id, which
@@ -8975,7 +8975,7 @@ function renderModels(p) {
       const sameNow = () => prefs[id]?.same ?? m.same ?? "";
       const sameBox = el("label", "msame");
       const same = input(sameNow(), m.merge || m.id);
-      same.title = t("The model other providers serve that {id} is the same as: the routing groups magpie finds put them together. Empty: by its own id", { id: m.id });
+      same.title = t("The model other providers serve that {id} is the same as: the routing groups Echo finds put them together. Empty: by its own id", { id: m.id });
       same.spellcheck = false;
       same.onchange = () => {
         const v = same.value.trim();
@@ -8986,7 +8986,7 @@ function renderModels(p) {
       sameBox.append(el("span", "", t("Same as")), same);
       row.append(sameBox);
       // what it costs the user, in dollars per million tokens, as the
-      // Usage page counts it (#819: only `magpie model price` set it):
+      // Usage page counts it (#819: only `Echo model price` set it):
       // each box shows its list price until a price is given, a part left
       // empty is the list's, and every part empty is its list price again
       // the 1-hour cache write, empty, is 2× input as Anthropic bills it,
@@ -9312,8 +9312,8 @@ function renderModels(p) {
   foot.append(rename);
   // a plugin's list that failed is its defaults, not the vendor's
   if (p.fetched && !p.listError) foot.append(el("span", "hint", t("vendor list · {when}", { when: ago(p.fetched) })));
-  // a signed-in account's list, until the vendor gives one, is magpie's own
-  else if (p.models.length) foot.append(el("span", "hint", t(p.account ? "magpie's list · Refresh asks the vendor" : decideOnly(p) ? "Jev's names · Refresh asks the vendor" : "from models.dev · Refresh asks the vendor")));
+  // a signed-in account's list, until the vendor gives one, is Echo's own
+  else if (p.models.length) foot.append(el("span", "hint", t(p.account ? "Echo's list · Refresh asks the vendor" : decideOnly(p) ? "Jev's names · Refresh asks the vendor" : "from models.dev · Refresh asks the vendor")));
   if (p.fetched && !p.account) {
     // the fetched list stands in for the picks when none are made
     const forget = el("button", "text action", t("Forget"));
@@ -9379,7 +9379,7 @@ const STAYS = [
 // (routing.js SINK_OPTS)
 const SINKS = [
   [false, "Keeps its place", "One rate limited while it still has quota rests as long as the vendor asks, then takes its place in the order again."],
-  [true, "Goes to the back", "One rate limited (429) while it still has quota goes to the back of the order, behind every one not rate limited since, and comes round again once those ahead of it are rate limited in turn — so the load goes round rather than back to the first each time. Out of quota, it rests as usual. Kept until magpie restarts."],
+  [true, "Goes to the back", "One rate limited (429) while it still has quota goes to the back of the order, behind every one not rate limited since, and comes round again once those ahead of it are rate limited in turn — so the load goes round rather than back to the first each time. Out of quota, it rests as usual. Kept until Echo restarts."],
 ];
 // routingOfDraft: what the editor's Save sends of them — only what was
 // picked and differs from what is saved
@@ -9394,20 +9394,20 @@ function renderRouting(p) {
   const routingNow = () => draft.routing ?? (p.routing || "");
   const affinityNow = () => draft.affinity ?? (p.affinity || "");
   const sinkNow = () => draft.sink ?? !!p.sink;
-  // what Codex or Claude Code sends past magpie goes to the account it is
-  // signed in to, which magpie moves on once Smart would count it spent
+  // what Codex or Claude Code sends past Echo goes to the account it is
+  // signed in to, which Echo moves on once Smart would count it spent
   // and back once the first has room (provider.KeepOnAnAccountWithRoom,
   // #209, #408)
   const a = p.account;
   // — at 98%, In order once used up (#530), never when kept on the first (#524)
   const own = (routing) => !a || (a.agent !== "codex" && a.agent !== "claude") ? ""
     : " " + (keptLogin(p)
-      ? t("Routing picks the account for each request through magpie, in the accounts' order; {agent} on its own stays signed in to {user}, whatever it has left.", { agent: a.agentName, user: keptLogin(p) })
+      ? t("Routing picks the account for each request through Echo, in the accounts' order; {agent} on its own stays signed in to {user}, whatever it has left.", { agent: a.agentName, user: keptLogin(p) })
       : p.keepLogin
-      ? t("Routing picks the account for each request through magpie; {agent} on its own stays signed in to the first account, whatever it has left.", { agent: a.agentName })
+      ? t("Routing picks the account for each request through Echo; {agent} on its own stays signed in to the first account, whatever it has left.", { agent: a.agentName })
       : routing === "order"
-        ? t("Routing picks the account for each request through magpie; {agent} on its own uses the one it is signed in to, which magpie moves to the next ticked account with room once it is used up, and back to the first once that has room again.", { agent: a.agentName })
-        : t("Routing picks the account for each request through magpie; {agent} on its own uses the one it is signed in to, which magpie moves to the next ticked account with room once it is 98% used, and back to the first once that has room again.", { agent: a.agentName }));
+        ? t("Routing picks the account for each request through Echo; {agent} on its own uses the one it is signed in to, which Echo moves to the next ticked account with room once it is used up, and back to the first once that has room again.", { agent: a.agentName })
+        : t("Routing picks the account for each request through Echo; {agent} on its own uses the one it is signed in to, which Echo moves to the next ticked account with room once it is 98% used, and back to the first once that has room again.", { agent: a.agentName }));
   // what the Save will make of it differs from what it is: said beside it
   const unsaved = () => {
     const u = el("span", "hint munsaved", t("unsaved"));
@@ -9522,7 +9522,7 @@ function fallbackHint(p) {
 
 // ---------- subscriptions ----------
 //
-// A Claude or ChatGPT subscription is added here, not in a terminal: magpie
+// A Claude or ChatGPT subscription is added here, not in a terminal: Echo
 // opens the vendor's own sign-in in the browser, takes the account when it
 // comes back, and lists it with the others — any of them one click from
 // being the one in use.
@@ -9537,7 +9537,7 @@ const SUBS = [
   // both can also come from CLIProxyAPI's auth files or the agent's own (importing below)
   // Anthropic has banned accounts it saw used from other tools: said before one is added
   { agent: "claude", name: "Claude", icon: "claude-color", plans: "Pro · Max · Team", importable: true, risk: true,
-    riskNote: "Anthropic may suspend or ban a Claude account it sees used outside its own apps. magpie sends requests through Claude Code, but Anthropic may still act on them; you use it at your own risk. Use an account you can afford to lose." },
+    riskNote: "Anthropic may suspend or ban a Claude account it sees used outside its own apps. Echo sends requests through Claude Code, but Anthropic may still act on them; you use it at your own risk. Use an account you can afford to lose." },
   { agent: "codex", name: "ChatGPT", icon: "openai", plans: "Plus · Pro · Business", importable: true },
   // OpenAI's Sign in with ChatGPT: the plan asked on api.openai.com, with the agent's own instructions (#933)
   { agent: "chatgpt-api", name: "ChatGPT API", icon: "openai", plans: "Plus · Pro · Business", own: true,
@@ -9567,22 +9567,22 @@ const SUBS = [
   // hint says which accounts each is for
   { agent: "qoder", get name() { return t("Qoder (international)"); }, icon: "qoder", plans: "Pro", own: true, risk: true,
     hint: "For accounts on qoder.com, the international site.",
-    riskNote: "Qoder has no public API for this; magpie signs requests as its desktop client would, which Qoder may treat as third-party use and act on. Use an account you can afford to lose." },
+    riskNote: "Qoder has no public API for this; Echo signs requests as its desktop client would, which Qoder may treat as third-party use and act on. Use an account you can afford to lose." },
   { agent: "qoder-cn", name: "Qoder CN", icon: "qoder", plans: "Pro", own: true, risk: true,
     hint: "For accounts on qoder.cn: signed in with an Alibaba Cloud account or a phone number.",
-    riskNote: "Qoder has no public API for this; magpie signs requests as its desktop client would, which Qoder may treat as third-party use and act on. Use an account you can afford to lose." },
-  // the devin CLI's own account is read; more are signed in beside it, each in a data folder of magpie's
+    riskNote: "Qoder has no public API for this; Echo signs requests as its desktop client would, which Qoder may treat as third-party use and act on. Use an account you can afford to lose." },
+  // the devin CLI's own account is read; more are signed in beside it, each in a data folder of Echo's
   { agent: "devin", name: "Devin", icon: "devin", plans: "Pro · Enterprise", own: true },
   // Zed's hosted models (Zed Pro, its trial), signed in at zed.dev as the editor is
   { agent: "zed", name: "Zed", icon: "zed", plans: "Pro · Student · Business", own: true, risk: true,
-    riskNote: "Zed serves these models to its own editor; magpie signs requests as the editor would, which Zed may treat as third-party use and act on. Use an account you can afford to lose." },
+    riskNote: "Zed serves these models to its own editor; Echo signs requests as the editor would, which Zed may treat as third-party use and act on. Use an account you can afford to lose." },
   // Factory's plans (Droid's account), signed in with WorkOS's device code as droid does; droid's own login stays its own
   // or added by an API key (fk-…), as droid takes FACTORY_API_KEY (the import box)
   { agent: "factory", name: "Factory", icon: "factory", plans: "Pro · Plus · Max", own: true, risk: true, importable: true,
-    riskNote: "Factory serves these models to its own Droid CLI; magpie signs requests as Droid would, which Factory may treat as third-party use and act on. Use an account you can afford to lose." },
+    riskNote: "Factory serves these models to its own Droid CLI; Echo signs requests as Droid would, which Factory may treat as third-party use and act on. Use an account you can afford to lose." },
   // Xiaomi MiMo's models (its free offer, MiMo plans), signed in at account.xiaomi.com as MiMo's app is
   { agent: "mimo-app", name: "Xiaomi MiMo", icon: "mimocode", plans: "Free · Starter · Plus · Pro · Ultra", own: true, risk: true,
-    riskNote: "Xiaomi serves these models to its own MiMo app; magpie signs requests as the app would, which Xiaomi may treat as third-party use and act on. Use an account you can afford to lose." },
+    riskNote: "Xiaomi serves these models to its own MiMo app; Echo signs requests as the app would, which Xiaomi may treat as third-party use and act on. Use an account you can afford to lose." },
   // Kiro's own sign-in page (Google, GitHub, Builder ID, Identity Center); kiro-cli's or the IDE's is read too
   { agent: "kiro", name: "Kiro", icon: "kiro-color", plans: "Free · Pro · Pro+ · Power", own: true },
   // Google's sign-ins; Gemini CLI's own account is read too
@@ -9619,7 +9619,7 @@ function pluginMethod(sub, site) {
 
 // pluginSubs: the providers OpenCode plugins sign in to (Settings →
 // Plugins), as subscriptions like the built-in ones. The plugin, not
-// magpie, signs in and carries the requests.
+// Echo, signs in and carries the requests.
 function pluginSubs() {
   return (providers.plugins || []).map((x) => ({
     agent: x.id, pid: x.pid, name: x.name, icon: x.icon, plugin: x, own: true,
@@ -9723,7 +9723,7 @@ async function signedIn(st) {
   renderProviders();
   const who = st.user || subOf(st.agent)?.name || st.agent;
   // signed in but listed nowhere (#155): say so rather than "added"
-  if (!p) status(t("{user} signed in, but magpie can't list it — please report this", { user: who }), "err");
+  if (!p) status(t("{user} signed in, but Echo can't list it — please report this", { user: who }), "err");
   // an account listed already is said to be, not added (#413)
   else if (st.again) status(t("{user} is already listed — its sign-in was renewed", { user: who }), "ok");
   else status(st.using ? t("Signed in as {user}", { user: who }) : t("{user} added — switch to it any time", { user: who }), "ok");
@@ -9813,7 +9813,7 @@ function renderPluginAsk(sub) {
   close.onclick = cancelSignIn;
   if (signing.state === "method") {
     tt.append(el("span", "n", t("How do you sign in to {name}?", { name: sub.name })),
-      el("span", "s", t("The plugin {spec} signs in and sends {name}'s requests; magpie only passes them on.", { spec: sub.plugin.spec, name: sub.name })));
+      el("span", "s", t("The plugin {spec} signs in and sends {name}'s requests; Echo only passes them on.", { spec: sub.plugin.spec, name: sub.name })));
     const ch = el("div", "choices");
     box.append(close, ch);
     sub.plugin.methods.forEach((m, i) => {
@@ -9872,7 +9872,7 @@ function renderPluginAsk(sub) {
 }
 
 // renderStepPlan: a StepFun provider's platform sign-in, which the user
-// makes in their own browser and brings here with magpie's bookmarklet
+// makes in their own browser and brings here with Echo's bookmarklet
 function renderStepPlan(sp) {
   const box = el("div", "stepplan");
   if (sp.signedIn) {
@@ -9894,7 +9894,7 @@ function renderStepPlan(sp) {
   s1.append(open);
   const s2 = el("li");
   // dragged to the bookmarks bar it is a bookmark; a click here does nothing
-  const bm = el("a", "bookmarklet", "magpie · StepFun");
+  const bm = el("a", "bookmarklet", "Echo · StepFun");
   bm.href = sp.bookmarklet;
   bm.onclick = (e) => e.preventDefault();
   const cp = el("button", "link", t("copy it"));
@@ -10085,7 +10085,7 @@ function renderSigning(sub) {
   box.append(el("span", "spinner"));
   if (signing.state === "installing") {
     tt.append(el("span", "n", t("Installing {cli}…", { cli: signing.installing })),
-      el("span", "s", t("{name} is used through its own CLI, which isn't on this computer yet. magpie is installing it with the official installer; the sign-in page opens as soon as it's done.", { name: sub.name })));
+      el("span", "s", t("{name} is used through its own CLI, which isn't on this computer yet. Echo is installing it with the official installer; the sign-in page opens as soon as it's done.", { name: sub.name })));
     box.append(tt);
     const x = el("button", "text", t("Cancel"));
     x.onclick = cancelSignIn;
@@ -10094,10 +10094,10 @@ function renderSigning(sub) {
   }
   tt.append(el("span", "n", t("Finish signing in to {name} in your browser", { name: sub.name })),
     el("span", "s", signing.state === "starting" ? t("Starting the sign-in…")
-      : sub.plugin ? (signing.instructions || (signing.pasteCode ? t("magpie opened the sign-in page. Paste the code it shows below.") : t("magpie opened the sign-in page. The account shows up here as soon as you're done.")))
-      : signing.pasteCode ? t("magpie opened the sign-in page. Paste the code it shows below.")
-      : signing.code && sub.agent === "factory" ? t("magpie opened Factory's sign-in page. Check it shows this code and confirm it; the account shows up here as soon as you're done.")
-      : signing.code ? t("magpie opened GitHub's device page. Enter this code there; the account shows up here as soon as you're done.") : t("magpie opened the sign-in page. The account shows up here as soon as you're done.")));
+      : sub.plugin ? (signing.instructions || (signing.pasteCode ? t("Echo opened the sign-in page. Paste the code it shows below.") : t("Echo opened the sign-in page. The account shows up here as soon as you're done.")))
+      : signing.pasteCode ? t("Echo opened the sign-in page. Paste the code it shows below.")
+      : signing.code && sub.agent === "factory" ? t("Echo opened Factory's sign-in page. Check it shows this code and confirm it; the account shows up here as soon as you're done.")
+      : signing.code ? t("Echo opened GitHub's device page. Enter this code there; the account shows up here as soon as you're done.") : t("Echo opened the sign-in page. The account shows up here as soon as you're done.")));
   if (signing.code) {
     const code = el("span", "devcode");
     code.append(el("code", "", signing.code), copyBtn(signing.code, t("Code")));
@@ -10106,7 +10106,7 @@ function renderSigning(sub) {
   box.append(tt);
   if (signing.url) {
     // the link itself, to select or copy into another browser or profile
-    // than the one magpie opened it in
+    // than the one Echo opened it in
     const link = el("span", "signlink");
     const u = el("code", "", signing.url);
     u.title = t("Open it in another browser or profile: copy it there");
@@ -10126,17 +10126,17 @@ function renderSigning(sub) {
     const flow = signing;
     const what = flow.pasteCode ? t("Code") : flow.pasteKey ? t("API key") : t("Callback URL");
     if (flow.pasteKey) {
-      // Command Code's page posts its key to magpie unseen: a browser that
-      // can't reach magpie (Docker) has no address to paste, so a key made
+      // Command Code's page posts its key to Echo unseen: a browser that
+      // can't reach Echo (Docker) has no address to paste, so a key made
       // on the keys page finishes it, as Command Code's CLI takes one
-      const s = el("span", "s", t("If the page can't reach magpie (it runs on a server or in Docker), make an API key on {name}'s keys page and paste it here.", { name: sub.name }) + " ");
+      const s = el("span", "s", t("If the page can't reach Echo (it runs on a server or in Docker), make an API key on {name}'s keys page and paste it here.", { name: sub.name }) + " ");
       if (flow.keysURL) {
         const keys = el("button", "link", t("Open the keys page"));
         keys.onclick = () => api("open", { url: flow.keysURL }).catch(() => {});
         s.append(keys);
       }
       tt.append(s);
-    } else if (!flow.pasteCode) tt.append(el("span", "s", t("If the page the browser ends on won't load (magpie runs on a server or in Docker), copy its whole address and paste it here.")));
+    } else if (!flow.pasteCode) tt.append(el("span", "s", t("If the page the browser ends on won't load (Echo runs on a server or in Docker), copy its whole address and paste it here.")));
     const form = el("form", "callback-form");
     const url = input(flow.callbackURL || "", what, flow.pasteKey ? "password" : "text");
     url.setAttribute("aria-label", what);
@@ -10172,7 +10172,7 @@ function renderSigning(sub) {
     form.append(url, submit);
     tt.append(form, why);
   }
-  // a plugin's browser sign-in whose page can't reach magpie (Docker: the
+  // a plugin's browser sign-in whose page can't reach Echo (Docker: the
   // Command Code plugin's Studio posts its key to 127.0.0.1) can be left
   // for the plugin's own API key way, without starting over
   const keyWay = sub.plugin && signing.method != null && !signing.pasteCode && signing.state === "waiting"
@@ -10180,7 +10180,7 @@ function renderSigning(sub) {
   if (keyWay >= 0 && keyWay !== signing.method) {
     const acts = tt.querySelector(".acts") || tt.appendChild(el("span", "acts"));
     const k = el("button", "link", t("Use an API key instead"));
-    k.title = t("If the page can't reach magpie (it runs on a server or in Docker)");
+    k.title = t("If the page can't reach Echo (it runs on a server or in Docker)");
     k.onclick = () => {
       if (signing?.id) api("signin/" + signing.id + "/cancel", {}).catch(() => {});
       startPluginSignIn(sub, keyWay);
@@ -10291,15 +10291,15 @@ function arrangeAccountRows(list, p) {
   }
 }
 
-// renderAccounts: every account of an agent magpie has, the one the agent
+// renderAccounts: every account of an agent Echo has, the one the agent
 // is signed in to first, and a way to add another. Like keys, any number
 // can be ticked: the gateway moves to the next ticked account when the
 // first is out of quota. Each shows how much of its allowance is used, so
 // which one to go to next is plain to see.
-// forgetOwnTitle: what Remove does to the agent's own sign-in, which magpie
+// forgetOwnTitle: what Remove does to the agent's own sign-in, which Echo
 // only reads — it is hidden, and shows again when the agent signs in anew.
 function forgetOwnTitle(a) {
-  return t("magpie stops showing and using {agent}'s own sign-in; its files are left as they are, and it shows again when {agent} signs in anew", { agent: a.agentName });
+  return t("Echo stops showing and using {agent}'s own sign-in; its files are left as they are, and it shows again when {agent} signs in anew", { agent: a.agentName });
 }
 
 // keptLogin: the account Codex or Claude Code is kept signed in to in
@@ -10346,7 +10346,7 @@ function renderAccounts(a, p) {
   // to it (#263)
   const pausable = (a.agent === "claude" || a.agent === "codex") && ls.some((l) => !unusable(l) && !l.active && l.on);
   const quota = loginUsageOf(a.agent);
-  // the first, which magpie signed the agent out of while it was spent:
+  // the first, which Echo signed the agent out of while it was spent:
   // it is signed back in once it has room (#408)
   const back = ls.find((l) => l.returns && !l.active);
   for (const l of ls) {
@@ -10375,8 +10375,8 @@ function renderAccounts(a, p) {
     // its usage cap: the share of each window it is used to at most
     const cap = accountCapOf(p, l.user);
     // Claude Code or Codex signed in to it asks its vendor itself, not
-    // through magpie: with no other account to sign it in to, the cap
-    // holds back only what goes through magpie (𝕏 on Discord: a 90% cap
+    // through Echo: with no other account to sign it in to, the cap
+    // holds back only what goes through Echo (𝕏 on Discord: a 90% cap
     // and the five hours run to 100%)
     const direct = l.active && !several && (a.agent === "claude" || a.agent === "codex") ? a.agentName : "";
     if (p) row.append(accountCapPill(p, l.user, cap, direct));
@@ -10399,12 +10399,12 @@ function renderAccounts(a, p) {
     } else if (l.active && kept && l.user !== firstUser) {
       // signed in to, kept so, and tried at its place in the order
       const signed = el("span", "using", l.paused ? t("Paused") : t("Signed in"));
-      signed.title = t("{agent} is kept signed in to this account; requests through magpie go to the accounts in their order", { agent: a.agentName });
+      signed.title = t("{agent} is kept signed in to this account; requests through Echo go to the accounts in their order", { agent: a.agentName });
       row.append(signed);
       if (on) row.append(makeFirst(l));
     } else if (l.active) {
       const using = el("span", "using", l.paused ? t("Paused") : back ? t("First for now") : several ? t("First") : t("In use"));
-      if (back && !l.paused) using.title = t("{user} was nearly used up, so magpie signed {agent} in to this one; it goes back to {user} once that has room again", { user: back.user, agent: a.agentName });
+      if (back && !l.paused) using.title = t("{user} was nearly used up, so Echo signed {agent} in to this one; it goes back to {user} once that has room again", { user: back.user, agent: a.agentName });
       row.append(using);
       if (a.agent === "qoder" || a.agent === "qoder-cn" || l.own) {
         const forget = el("button", "text quiet", t("Remove"));
@@ -10422,17 +10422,17 @@ function renderAccounts(a, p) {
         // Codex is signed in to another of its accounts first, then this
         // one goes (ForgetLogin), rather than Codex signed out
         const forget = el("button", "text quiet", t("Remove"));
-        forget.title = t("Codex is signed in to another of its accounts, and magpie forgets this one; the account itself is untouched");
+        forget.title = t("Codex is signed in to another of its accounts, and Echo forgets this one; the account itself is untouched");
         forget.onclick = () => accountAction("login/forget", { agent: a.agent, user: l.user }, t("{user} removed", { user: l.user }));
         row.append(forget);
       }
     } else {
       const forget = el("button", "text quiet", t("Remove"));
-      forget.title = l.own ? forgetOwnTitle(a) : t("magpie forgets this account's sign-in; the account itself is untouched");
+      forget.title = l.own ? forgetOwnTitle(a) : t("Echo forgets this account's sign-in; the account itself is untouched");
       forget.onclick = () => accountAction("login/forget", { agent: a.agent, user: l.user }, t("{user} removed", { user: l.user }));
       if (l === back) {
         const again = el("span", "using", t("First again once it has room"));
-        again.title = t("magpie signs {agent} back in to this account once it has room again", { agent: a.agentName });
+        again.title = t("Echo signs {agent} back in to this account once it has room again", { agent: a.agentName });
         row.append(again);
       }
       if (kept) {
@@ -10453,14 +10453,14 @@ function renderAccounts(a, p) {
     if (amBox) row.append(amBox);
     list.append(row);
   }
-  // magpie signs Codex or Claude Code in to the next account when the
+  // Echo signs Codex or Claude Code in to the next account when the
   // first runs low (#209, #408); this keeps it on the first instead, or on
   // an account of the user's choosing, the gateway still spreading requests
   // over the ticked ones in their order (#524)
   if ((a.agent === "codex" || a.agent === "claude") && several && p) {
     const box = el("div", "keep-login");
     const [keep, cb] = tick(t("Keep {agent} signed in to", { agent: a.agentName }), !!p.keepLogin);
-    keep.title = t("magpie won't sign {agent} in to another account when the first runs low; requests through magpie still go to the other ticked accounts as Routing says", { agent: a.agentName });
+    keep.title = t("Echo won't sign {agent} in to another account when the first runs low; requests through Echo still go to the other ticked accounts as Routing says", { agent: a.agentName });
     // the app's own menu, as every other pick in it, not a native select
     let keepAs = kept;
     const opts = [{ v: "", name: t("the first account"), note: "", literalName: true }];
@@ -10475,7 +10475,7 @@ function renderAccounts(a, p) {
     const post = (keepLogin) => {
       const body = { id: p.id, keepLogin };
       if (keepLogin && keepAs) body.keepLoginAs = keepAs;
-      accountAction("provider/keeplogin", body, !keepLogin ? t("magpie moves {agent} to an account with room again", { agent: a.agentName })
+      accountAction("provider/keeplogin", body, !keepLogin ? t("Echo moves {agent} to an account with room again", { agent: a.agentName })
         : keepAs ? t("{agent} stays signed in to {user}", { agent: a.agentName, user: keepAs }) : t("{agent} stays signed in to the first account", { agent: a.agentName }));
     };
     cb.onchange = () => post(cb.checked);
@@ -10521,7 +10521,7 @@ function renderAccounts(a, p) {
 
 // renderCodexDaemon: Codex's background app-server read the sign-in when it
 // started, so after a switch the Codex sessions that attach to it are still
-// on the account before (user) until it restarts. magpie doesn't restart it
+// on the account before (user) until it restarts. Echo doesn't restart it
 // unasked: that ends the Codex sessions running on it.
 function renderCodexDaemon(user) {
   const box = el("div", "signing daemon");
@@ -10540,7 +10540,7 @@ function renderCodexDaemon(user) {
 }
 
 // Accounts brought in from another tool's export instead of signing in
-// again: the files' text (or what is pasted) goes to magpie, which checks
+// again: the files' text (or what is pasted) goes to Echo, which checks
 // each account with the vendor before keeping it, and says what became of
 // each. What is read stays here only until it is sent; the box masks it.
 function startImport(agent) {
@@ -10581,7 +10581,7 @@ async function runImport(agent) {
   }
 }
 
-const importStatus = { added: "Added", updated: "Updated with this sign-in", exists: "Already in magpie", failed: "Not added" };
+const importStatus = { added: "Added", updated: "Updated with this sign-in", exists: "Already in Echo", failed: "Not added" };
 
 function renderLoginImport(sub) {
   const box = el("div", "signing import");
@@ -10677,18 +10677,18 @@ function loginUsageOf(agent) {
 function quotaError(err) {
   if (/sign-in has expired/.test(err)) return t("Signed out — add this account again to use it");
   if (/no longer supported for Gemini Code Assist for individuals/.test(err)) return t("Google no longer serves personal accounts to Gemini CLI — hover for more");
-  if (/magpie accounts project/.test(err)) return t("Needs a Google Cloud project — hover for how");
+  if (/Echo accounts project/.test(err)) return t("Needs a Google Cloud project — hover for how");
   if (/^Antigravity (hasn't set|won't serve)/.test(err)) return t("Antigravity hasn't set this account up — hover for why");
   if (/violation of Terms of Service/i.test(err)) return t("Google has suspended this account — hover for details");
   if (/access token is invalid or expired|didn't take the access token/.test(err)) return t("AiHubMix didn't take the access token — paste a new one in the provider's settings");
   if (/this key has no limit/.test(err)) return t("This key has no limit — add the account's access token in the provider's settings to see its balance");
-  // a remote magpie's card (remote_quotas.go)
-  if (/^nothing read on that magpie yet/.test(err)) return t("Nothing read on that computer yet — refresh this card to have it read");
-  if (/^remote magpie doesn't share its quotas/.test(err)) return t("That computer's magpie doesn't share its quotas yet — update magpie there");
+  // a remote Echo's card (remote_quotas.go)
+  if (/^nothing read on that Echo yet/.test(err)) return t("Nothing read on that computer yet — refresh this card to have it read");
+  if (/^remote Echo doesn't share its quotas/.test(err)) return t("That computer's Echo doesn't share its quotas yet — update Echo there");
   return balanceError(err) || t("Allowance unavailable");
 }
 
-// the Balance field magpie reads, left empty, from a query whose reply it
+// the Balance field Echo reads, left empty, from a query whose reply it
 // knows (balancePathOf in balance.go), shown as the field's placeholder
 function balanceFieldOf(raw) {
   let path = "";
@@ -10701,7 +10701,7 @@ function balanceFieldOf(raw) {
   return "data.balance";
 }
 
-// balanceError: a balance that couldn't be read, said plainly where magpie
+// balanceError: a balance that couldn't be read, said plainly where Echo
 // knows the fix (see balance.go); "" for any other.
 function balanceError(err) {
   if (/takes the API key, not the access token/.test(err)) return t("The Balance URL …/api/usage/token takes the API key, not the access token — set it to …/api/user/self in the provider's settings");
@@ -10895,14 +10895,14 @@ function capHeldOf(q, cap) {
 // directNote: why the cap can't stop agent, signed in to the account and
 // asking its vendor itself, with no other account on to move it to
 function directNote(agent) {
-  return t("{agent} is signed in to this account and asks its vendor itself, not through magpie, so with no other account on to move it to, {agent} goes on using it past the cap. Add another account, or pick {agent}'s models via magpie, for the cap to hold it", { agent });
+  return t("{agent} is signed in to this account and asks its vendor itself, not through Echo, so with no other account on to move it to, {agent} goes on using it past the cap. Add another account, or pick {agent}'s models via Echo, for the cap to hold it", { agent });
 }
 function capHeldNote(held, cap, several, direct) {
   if (direct) {
-    // the account is held for what goes through magpie, but the agent
+    // the account is held for what goes through Echo, but the agent
     // signed in to it isn't: the note doesn't say it is safe at its cap
     const n = el("span", "using acap-held acap-direct", t("At its cap · {agent} still uses it", { agent: direct }));
-    n.title = t("A usage window is at {n}%, past this account's {cap}% cap: requests through magpie are refused with a usage-cap error until it renews", { n: Math.round(held.used), cap })
+    n.title = t("A usage window is at {n}%, past this account's {cap}% cap: requests through Echo are refused with a usage-cap error until it renews", { n: Math.round(held.used), cap })
       + (held.back ? " · " + resetText(new Date(held.back), new Date(held.back).toLocaleString()) : "")
       + "\n" + directNote(direct);
     return n;
@@ -10910,13 +10910,13 @@ function capHeldNote(held, cap, several, direct) {
   if (!held.all) {
     const names = held.some.join(", ");
     const n = el("span", "using acap-held", held.back ? t("{names} at its cap · back {in}", { names, in: untilText(held.back) }) : t("{names} at its cap", { names }));
-    n.title = t("{names} is at {n}%, past this account's {cap}% cap, so magpie sends the requests it counts to the other accounts until it renews; other models still use this account", { names, n: Math.round(held.used), cap })
+    n.title = t("{names} is at {n}%, past this account's {cap}% cap, so Echo sends the requests it counts to the other accounts until it renews; other models still use this account", { names, n: Math.round(held.used), cap })
       + (held.back ? " · " + resetText(new Date(held.back), new Date(held.back).toLocaleString()) : "")
       + (several ? "" : "\n" + t("With no other account on, those requests are refused with a usage-cap error until then"));
     return n;
   }
   const n = el("span", "using acap-held", held.back ? t("At its cap · back {in}", { in: untilText(held.back) }) : t("At its cap"));
-  n.title = t("A usage window is at {n}%, past this account's {cap}% cap, so magpie counts it as used up and sends requests to the other accounts until that window renews", { n: Math.round(held.used), cap })
+  n.title = t("A usage window is at {n}%, past this account's {cap}% cap, so Echo counts it as used up and sends requests to the other accounts until that window renews", { n: Math.round(held.used), cap })
     + (held.back ? " · " + resetText(new Date(held.back), new Date(held.back).toLocaleString()) : "")
     + (several ? "" : "\n" + t("With no other account on, requests are refused with a usage-cap error until then"));
   return n;
@@ -10932,8 +10932,8 @@ function capMark(track, w, cap) {
 function accountCapPill(p, user, cap, direct) {
   const pill = el("button", "acap" + (cap ? " set" : ""), cap ? t("Cap {n}%", { n: cap }) : t("No cap"));
   pill.type = "button";
-  pill.title = (cap ? t("Used to {n}% of each usage window at most; past it, magpie counts this account as used up until the window renews. Click to change", { n: cap })
-    : t("Used to 100% of its usage windows. Click to cap it at a share of each, so magpie goes on to the other accounts past it"))
+  pill.title = (cap ? t("Used to {n}% of each usage window at most; past it, Echo counts this account as used up until the window renews. Click to change", { n: cap })
+    : t("Used to 100% of its usage windows. Click to cap it at a share of each, so Echo goes on to the other accounts past it"))
     + (direct ? "\n\n" + directNote(direct) : "");
   pill.setAttribute("aria-haspopup", "menu");
   pill.setAttribute("aria-expanded", "false");
@@ -11792,7 +11792,7 @@ function respellURL(u, api) {
 function moveWhy(m, p) {
   const a = m.why?.args || {};
   switch (m.why?.code) {
-    case "offline": return t("magpie couldn't reach npm to install the plugin. Check the network or proxy, then try again.");
+    case "offline": return t("Echo couldn't reach npm to install the plugin. Check the network or proxy, then try again.");
     case "install": return t("npm couldn't install the plugin: {line}", { line: a.line });
     case "lapsed": return t("every {name} account needs signing in again. Sign one in above, then move.", { name: p.name });
     case "unserved": return a.user
@@ -11803,7 +11803,7 @@ function moveWhy(m, p) {
   return m.error || "";
 }
 
-// renderMove: which runs the subscription, magpie's built-in or its
+// renderMove: which runs the subscription, Echo's built-in or its
 // community plugin, and the move between them. The editor stays open
 // through it: the button says what it is doing, a failure is said under
 // it, and on success the field turns over where the reader is.
@@ -11813,7 +11813,7 @@ function renderMove(p) {
   const onPlugin = m.state === "plugin";
   const said = el("div", "", onPlugin
     ? t("The community {name} plugin, with the accounts you had here.", { name: p.name })
-    : t("magpie's built-in · or the community {name} plugin, with the same accounts", { name: p.name }));
+    : t("Echo's built-in · or the community {name} plugin, with the same accounts", { name: p.name }));
   said.title = m.package; // the npm package: for the curious, not the sentence
   const why = el("div", "move-why");
   why.setAttribute("role", "alert");
@@ -11915,12 +11915,12 @@ function doneSaving(b) {
 // took away (a provider switched off or removed, the last account signed
 // out: #200), each to the same model elsewhere or back to its default.
 function saidMoved(okMsg, list = providers?.moved) {
-  // one magpie couldn't move (its file unwritable) is still on the model
+  // one Echo couldn't move (its file unwritable) is still on the model
   // gone, and the change made all the same
   let stuck = false;
   const moved = (list || []).map((m) => {
     const who = m.field === "model" ? m.agent : m.agent + " " + m.field;
-    if (m.error) { stuck = true; return t("{agent} is still on {model}, which magpie no longer serves: {error}", { agent: who, model: m.from, error: m.error }); }
+    if (m.error) { stuck = true; return t("{agent} is still on {model}, which Echo no longer serves: {error}", { agent: who, model: m.from, error: m.error }); }
     return m.to ? t("{agent} moved to {model}", { agent: who, model: m.to })
       : t("{agent} is back on its default", { agent: who });
   });
@@ -12208,7 +12208,7 @@ function fmtN(n) {
   return String(n);
 }
 // currency is Settings' choice of what a cost shows as: usd (its own price)
-// or cny, converted with fx (the rate this session last got from magpie,
+// or cny, converted with fx (the rate this session last got from Echo,
 // with when that was and whether it's stale — kept only for the tooltip;
 // see applyPrefs, which fills both from what /api/settings answers).
 let currency = "usd";
@@ -12227,7 +12227,7 @@ function renderCosts() {
   if (usage) renderUsage();
   if (ledger && usageTab === "requests") renderLedger();
   if (sessions) renderSessions();
-  document.dispatchEvent(new Event("magpie-costs-changed"));
+  document.dispatchEvent(new Event("Echo-costs-changed"));
 }
 const tokensOf = (t) => t.input + t.output;
 
@@ -12328,7 +12328,7 @@ function renderQuotas() {
       // what was left over time, against an even burn (#651)
       const curve = !brief && !sub.error && quotaCurve(sub);
       if (curve) card.append(curve);
-      // WorkBuddy's credits, day by day, as magpie counted them (#568)
+      // WorkBuddy's credits, day by day, as Echo counted them (#568)
       if (!brief && sub.daily && !sub.error) card.append(creditDays(sub));
       // what is left besides the windows, under them
       if (sub.balance && sub.windows?.length && !sub.error) card.append(balanceRow(sub, "What is left on the account besides its windows", false));
@@ -12376,7 +12376,7 @@ function renderQuotas() {
 // the one that answered last, else the first — and the others in brief,
 // their bars alone, a click opening one (whqtian on Discord: 只显示一个账号
 // 即可，其他的可以点击展开; ARNO, 17 subscriptions and 29 accounts: 以前每个
-// 账号所占的空间很小，基本能一页看到所有账号… 关了magpie后又得一个个展开).
+// 账号所占的空间很小，基本能一页看到所有账号… 关了Echo后又得一个个展开).
 // The tray panel, with less room, leaves the ones in brief out. Each
 // account's full or brief is remembered by provider and account
 // (magpie.usageAccounts), for the window and the panel alike; a provider
@@ -12512,7 +12512,7 @@ function usageAcctFold(q, open) {
 
 // The Usage page's cards in the order they were dragged to (settings
 // usageOrder, by provider id), as the Agents page's rows are; one it doesn't
-// name keeps magpie's own order after them. The tray panel's Usage tab
+// name keeps Echo's own order after them. The tray panel's Usage tab
 // follows it too.
 function byUsageOrder(list) {
   const order = state.settings?.usageOrder || [];
@@ -12575,9 +12575,9 @@ async function moveUsage(key, to) {
 }
 
 // creditDays: the credits an account used each day of the period, as
-// magpie counted them from its readings of the vendor's meter, which tells
+// Echo counted them from its readings of the vendor's meter, which tells
 // only what the cycle has used so far — a bar a day, and the period's sum;
-// a day before magpie first read it is not known rather than nothing.
+// a day before Echo first read it is not known rather than nothing.
 function creditDays(sub) {
   const box = el("div", "credit-days");
   const { since, days } = sub.daily;
@@ -12599,7 +12599,7 @@ function creditDays(sub) {
   const sum = list.reduce((a, d) => a + d.used, 0);
   const head = el("div", "cd-head");
   const name = el("span", "", t("Credits used per day"));
-  name.title = t("Counted from magpie's readings of the vendor's meter, since {date}: what is used while magpie isn't reading it is counted on the day it next does", { date: dayName(new Date(since + "T12:00:00")) });
+  name.title = t("Counted from Echo's readings of the vendor's meter, since {date}: what is used while Echo isn't reading it is counted on the day it next does", { date: dayName(new Date(since + "T12:00:00")) });
   head.append(name, el("b", "", n === 1 ? t("{n} today", { n: num(sum) }) : t("{n} in {days} days", { n: num(sum), days: n })));
   box.append(head);
   if (n > 1) {
@@ -12610,7 +12610,7 @@ function creditDays(sub) {
       const fill = el("i");
       fill.style.height = d.known && peak ? Math.max(d.used ? 6 : 0, 100 * d.used / peak).toFixed(1) + "%" : "0%";
       b.append(fill);
-      b.title = d.known ? t("{date}: {n} credits", { date: dayName(d.date), n: num(d.used) }) : t("{date}: not counted — magpie began counting on {since}", { date: dayName(d.date), since: dayName(new Date(since + "T12:00:00")) });
+      b.title = d.known ? t("{date}: {n} credits", { date: dayName(d.date), n: num(d.used) }) : t("{date}: not counted — Echo began counting on {since}", { date: dayName(d.date), since: dayName(new Date(since + "T12:00:00")) });
       bars.append(b);
     }
     box.append(bars);
@@ -12619,7 +12619,7 @@ function creditDays(sub) {
   return box;
 }
 
-// What was left of an account's windows over time (#651), from magpie's
+// What was left of an account's windows over time (#651), from Echo's
 // readings of them (and those of the computers sharing usage with it): a
 // line a window, the percent left, broken where the window started again;
 // a dashed line from the window's start to its reset is an even burn, and
@@ -12677,7 +12677,7 @@ function quotaLines(sub) {
   return out;
 }
 // quotaCycleBreak: whether b, read after a, is of its window started again,
-// as magpie's own record of them says (quota_history.go's newCycle)
+// as Echo's own record of them says (quota_history.go's newCycle)
 function quotaCycleBreak(a, b) {
   if (a.reset == null && b.reset == null) return b.left > a.left + 5;
   if (a.reset == null || b.reset == null) return true;
@@ -12824,7 +12824,7 @@ function balanceAmount(sub, v) {
   const n = v.toLocaleString(intlLang(), { minimumFractionDigits: Math.abs(v) < 100 ? 2 : 0, maximumFractionDigits: 2 });
   return m ? m[1] + n + m[2] : n;
 }
-// balanceCurve: a key's balance over time, as magpie read it, under its
+// balanceCurve: a key's balance over time, as Echo read it, under its
 // figure on the Usage page (TJHHHH on Discord): the line, the least-squares
 // line through it since the last top-up dashed on to where it meets zero
 // when that is near, and when it runs out at that pace in the head. The
@@ -12840,7 +12840,7 @@ function balanceCurve(sub) {
   const out = tr.runsOut ? Date.parse(tr.runsOut) : null;
   const pace = el("span", "qc-range");
   head.append(el("span", "", t("Balance over time")), pace);
-  box.title = t("Solid: the balance as magpie read it. Dashed: a straight line fitted through it since the last top-up, carried on to where it runs out. Click to enlarge.");
+  box.title = t("Solid: the balance as Echo read it. Dashed: a straight line fitted through it since the last top-up, carried on to where it runs out. Click to enlarge.");
   const W = 300, H = 60;
   const g = sv("svg", { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none", class: "qc-plot", role: "img" });
   curveZoom(box, g);
@@ -13219,7 +13219,7 @@ function renderPanelUse() {
     out.push(el("span", "skeleton pu-sk"), el("span", "skeleton pu-sk"));
   } else if (!l.total && !l.day) {
     const none = el("div", "pu-none");
-    none.append(el("b", "", t(panelUseProvider || panelUsePeriod !== "today" ? "No requests here" : "No requests today")), t("Every request an agent sends to magpie, and every call the agents' own session files record, is counted here."));
+    none.append(el("b", "", t(panelUseProvider || panelUsePeriod !== "today" ? "No requests here" : "No requests today")), t("Every request an agent sends to Echo, and every call the agents' own session files record, is counted here."));
     out.push(none);
   } else {
     const prompt = l.input + l.cache_write + l.cache_read;
@@ -13648,7 +13648,7 @@ function creditsRow(q, cls) {
 }
 function creditsTitle(on) {
   return t(on ? "On: once one of this account's windows is used up, ChatGPT answers on the account's credits, if it holds any, so a task goes on. Click to turn it off."
-    : "Off: once one of this account's windows is used up, by magpie's latest reading (refreshed about every minute), magpie holds it till the window renews, and requests go to your other accounts, groups and fallbacks rather than spending its credits. With none of them left, a request is refused with why, unless Auto-use resets is on and its week is used up: then a reset is used first.");
+    : "Off: once one of this account's windows is used up, by Echo's latest reading (refreshed about every minute), Echo holds it till the window renews, and requests go to your other accounts, groups and fallbacks rather than spending its credits. With none of them left, a request is refused with why, unless Auto-use resets is on and its week is used up: then a reset is used first.");
 }
 
 // creditsButton turns that on or off: a switch, its words beside it.
@@ -13689,25 +13689,25 @@ const CHECKINS = {
   "": {
     pref: "workbuddyCheckin", api: "workbuddy-checkin",
     say: "WorkBuddy's daily check-in, as pressing 签到 in WorkBuddy does",
-    on: "On: magpie checks each WorkBuddy (China) account in once a day, as Settings' Daily check-in does. Click to turn it off.",
+    on: "On: Echo checks each WorkBuddy (China) account in once a day, as Settings' Daily check-in does. Click to turn it off.",
     off: "Check each WorkBuddy (China) account in once a day, as Settings' Daily check-in does",
   },
   trae: {
     pref: "traeCheckin", api: "trae-checkin",
     say: "Trae CN's daily check-in, as pressing 签到 in Trae does",
-    on: "On: magpie checks each Trae CN account in once a day, as Settings' Daily check-in does. Click to turn it off.",
+    on: "On: Echo checks each Trae CN account in once a day, as Settings' Daily check-in does. Click to turn it off.",
     off: "Check each Trae CN account in once a day, as Settings' Daily check-in does",
   },
   minimax: {
     pref: "minimaxCheckin", api: "minimax-checkin",
     say: "MiniMax Code's daily check-in, as pressing 签到 in MiniMax Code does",
-    on: "On: magpie checks each MiniMax Code account in once a day, as Settings' Daily check-in does. Click to turn it off.",
+    on: "On: Echo checks each MiniMax Code account in once a day, as Settings' Daily check-in does. Click to turn it off.",
     off: "Check each MiniMax Code account in once a day, as Settings' Daily check-in does",
   },
   qoder: {
     pref: "qoderCheckin", api: "qoder-checkin",
     say: "Qoder's daily credits, as claiming them in Qoder does",
-    on: "On: magpie claims each Qoder account's daily credits once a day, as Settings' Daily check-in does. Click to turn it off.",
+    on: "On: Echo claims each Qoder account's daily credits once a day, as Settings' Daily check-in does. Click to turn it off.",
     off: "Claim each Qoder account's daily credits once a day, as Settings' Daily check-in does",
   },
 };
@@ -13736,7 +13736,7 @@ function checkinRow(q, first, subs) {
       default:
         kind = "bad";
         // why, in the row: a reason only in the tooltip read as no reason (#808)
-        text = t(on ? "Check-in failed; magpie tries again later" : "Check-in failed") + (r.msg ? " · " + r.msg : "");
+        text = t(on ? "Check-in failed; Echo tries again later" : "Check-in failed") + (r.msg ? " · " + r.msg : "");
     }
   } else {
     kind = on ? "wait" : "";
@@ -13759,7 +13759,7 @@ function checkinRow(q, first, subs) {
     try {
       prefs = await writingPrefs(api("settings/" + vendor.api, { on: !on }));
       state.settings = prefs;
-      status(t(on ? "Daily check-in turned off" : "Daily check-in turned on; magpie checks in within a few minutes"), "ok");
+      status(t(on ? "Daily check-in turned off" : "Daily check-in turned on; Echo checks in within a few minutes"), "ok");
       renderQuotas();
     } catch (err) {
       auto.disabled = false;
@@ -14306,7 +14306,7 @@ function ledTime(when) {
 }
 // the model the reply named: amber, as the Routing page's tag, when it is
 // another than the one sent; plain when it is that one under a dated name,
-// or the member a remote magpie's routing group sent it to, said in its title
+// or the member a remote Echo's routing group sent it to, said in its title
 function ledServed(r) {
   if (!r.served) return el("span", "faint", "—");
   if (r.routed && !r.swapped) {
@@ -14402,10 +14402,10 @@ function ledDetail(r, cols) {
   // model the conversation never picked reads as what it is (#714)
   if (r.kind) add("Called for", window.kindName ? window.kindName(r.kind) : r.kind);
   if (r.ttft_ms) add("First token", ledTook(r.ttft_ms));
-  // of it, magpie's own time before the request went to the vendor, and the
+  // of it, Echo's own time before the request went to the vendor, and the
   // vendor's wait from then to its first token
   if (r.ttft_ms && r.sent_ms) {
-    add("In magpie", ledTook(r.sent_ms));
+    add("In Echo", ledTook(r.sent_ms));
     add("Vendor's first token", ledTook(Math.max(0, r.ttft_ms - r.sent_ms)));
   }
   if (r.reasoning) add("Reasoning tokens", ledNum(r.reasoning));
@@ -14447,7 +14447,7 @@ function ledDetail(r, cols) {
 
 // What was said in a request — what its agent was given, and what came back —
 // is in the agent's own session file, and read from it when a row is opened
-// (the server finds the call by its session and time); magpie keeps no copy.
+// (the server finds the call by its session and time); Echo keeps no copy.
 // What came is kept here while the list is looked at, so a row opened again, or
 // drawn again as the list is read anew, doesn't ask again.
 const ledContent = new Map();
@@ -14474,7 +14474,7 @@ function ledLoadContent(r) {
 }
 const LED_WHY = {
   session: "No session was named with this request, so its session file can't be found",
-  agent: "magpie reads the session files of Claude Code, Claude Desktop and Codex only",
+  agent: "Echo reads the session files of Claude Code, Claude Desktop and Codex only",
   missing: "This request isn't in the agent's session files: they may be deleted, moved, or not written yet",
   read: "The session file couldn't be read",
 };
@@ -14526,7 +14526,7 @@ function ledContentBox(c) {
     box.append(sec);
   }
   if (c.cut) box.append(el("p", "cx-none", t("There was more than is shown here")));
-  box.append(el("p", "cx-src", t("Read from the agent's session file; magpie keeps no copy")));
+  box.append(el("p", "cx-src", t("Read from the agent's session file; Echo keeps no copy")));
   return box;
 }
 
@@ -15128,7 +15128,7 @@ function renderLedger() {
     }
     td(when, "when", new Date(r.t).toLocaleString(intlLang() || "en"));
     const who = el("span", "who");
-    // an agent on another computer, whose magpie passed the request on
+    // an agent on another computer, whose Echo passed the request on
     const name = r.agentName || r.agent;
     // one made on another computer, whose usage sync brought (#542)
     const at = r.computerName ? t("{agent} · on {computer}", { agent: name, computer: r.computerName }) : name;
@@ -16517,7 +16517,7 @@ function sessSpent(s) {
 }
 
 // sessModelsText: a session's models, the first two and how many more, and
-// where magpie's gateway sent its calls, the most first: a routing group's
+// where Echo's gateway sent its calls, the most first: a routing group's
 // member and the reasoning it was asked for
 function sessModelsText(s) {
   const via = s.via?.length ? "→ " + [s.via[0].model, s.via[0].effort].filter(Boolean).join(" · ") + (s.via.length > 1 ? " +" + (s.via.length - 1) : "") : "";
@@ -16595,7 +16595,7 @@ function sessUsageDetail(d, s, line) {
   (s.via || []).forEach((v, i) => line(i ? "" : t("Routed"), viaText(v) + " · " + t("{n} tokens", { n: fmtN(v.tokens) })));
 }
 
-// one place a session's calls went through magpie, in words
+// one place a session's calls went through Echo, in words
 function viaText(v) {
   return `${v.provider}/${v.model}` + (v.effort ? " · " + v.effort : "") + " · " + t("{n} calls", { n: v.calls });
 }
@@ -16609,7 +16609,7 @@ $("#sessQ").onkeydown = (e) => { if (e.key === "Escape" && e.target.value) { e.s
 //
 // Three choices (palette, language, what the tray icon opens) and the facts
 // people come looking for:
-// the version, where magpie keeps its files, the gateway's address.
+// the version, where Echo keeps its files, the gateway's address.
 
 const THEMES = [["system", "System"], ["light", "Light"], ["dark", "Dark"]];
 const LOCALES = [["system", "System"], ["en", "English"], ["zh", "中文"], ["ja", "日本語"], ["de", "Deutsch"]];
@@ -16617,7 +16617,7 @@ const TRAYS = [["panel", "Quick panel"], ["window", "Main window"]];
 const CURRENCIES = [["usd", "$ USD"], ["cny", "¥ CNY"]];
 // The text size is the windows' own zoom, as a browser's Ctrl/Cmd +: the
 // page is laid out again in larger CSS pixels, so everything it measures is
-// as at 100%, and magpie sizes the windows around it (textsize.go). None is
+// as at 100%, and Echo sizes the windows around it (textsize.go). None is
 // under 100%: WebView2 and WebKitGTK zoom no smaller through Wails.
 const TEXT_SIZES = [100, 110, 125, 150];
 const textSizeKeys = () => /^Mac/.test(navigator.platform) ? "⌘+ ⌘− ⌘0" : "Ctrl+ Ctrl− Ctrl+0";
@@ -16727,7 +16727,7 @@ function applyPrefs(s, rate) {
   return was !== locale;
 }
 
-// Omarchy's bar: magpie's icon there as a widget of its own (Settings → Bar
+// Omarchy's bar: Echo's icon there as a widget of its own (Settings → Bar
 // icon), offered only in the app on Omarchy
 let barIcon = null;
 function renderBarIcon() {
@@ -16744,7 +16744,7 @@ async function loadSettings() {
   const s = await api("settings");
   if (!prefsSettled(since) && prefs) return; // the save draws the page when it's in
   prefs = s;
-  // the WebDAV setup can have been changed from outside the window (magpie
+  // the WebDAV setup can have been changed from outside the window (Echo
   // webdav at the terminal): the page's copy of it is dropped, so the page
   // is drawn from a fresh read. Coming back to the window is safe with a
   // form open: load() keeps off this path while one is, so it is never
@@ -16889,7 +16889,7 @@ function setSetTab(tab, remember) {
   setSetTab(setTab);
 }
 
-// Settings' Command line (PAMI on Discord): whether `magpie` in a terminal
+// Settings' Command line (PAMI on Discord): whether `Echo` in a terminal
 // opened now runs this app, in each shell, and a button that puts it there
 // — a link in a folder already on PATH, on Windows the app's folder first
 // in the user's PATH. A shell's profile is written only from that shell's
@@ -16912,22 +16912,22 @@ function renderCLI(r) {
       cliView = await api("cli", body);
       cliAt = Date.now();
       paint(cliView);
-      status(cliView.windows && cliView.shim ? t("Added: magpie.cmd beside {name} runs it as magpie; open a new PowerShell or Command Prompt window to run magpie", { name: exeName(cliView.exe) })
-        : cliView.windows ? t("Added: open a new PowerShell or Command Prompt window to run magpie") : t("Added: open a new terminal window to run magpie"), "ok");
+      status(cliView.windows && cliView.shim ? t("Added: magpie.cmd beside {name} runs it as Echo; open a new PowerShell or Command Prompt window to run Echo", { name: exeName(cliView.exe) })
+        : cliView.windows ? t("Added: open a new PowerShell or Command Prompt window to run Echo") : t("Added: open a new terminal window to run Echo"), "ok");
     } catch (e) { status(t(e.message), "err"); } finally { btn.disabled = false; }
   };
   const paint = (v) => {
-    sub.textContent = v.stuck === "translocated" ? t("macOS runs magpie from a temporary copy until it is moved to Applications: move it there first")
-      : v.stuck === "read-only" ? t("magpie runs from its disk image: copy it to Applications first")
-      : v.ours ? t("In a new terminal, magpie runs this app: {path}", { path: v.command }) + (v.shim && v.command === v.shim ? " (" + t("which runs {name}", { name: exeName(v.exe) }) + ")" : "")
-      : v.command ? t("In a new terminal, magpie runs another copy: {path}", { path: v.command }) + (v.version ? " (" + v.version + ")" : "")
-      : t("A new terminal can't find the magpie command");
+    sub.textContent = v.stuck === "translocated" ? t("macOS runs Echo from a temporary copy until it is moved to Applications: move it there first")
+      : v.stuck === "read-only" ? t("Echo runs from its disk image: copy it to Applications first")
+      : v.ours ? t("In a new terminal, Echo runs this app: {path}", { path: v.command }) + (v.shim && v.command === v.shim ? " (" + t("which runs {name}", { name: exeName(v.exe) }) + ")" : "")
+      : v.command ? t("In a new terminal, Echo runs another copy: {path}", { path: v.command }) + (v.version ? " (" + v.version + ")" : "")
+      : t("A new terminal can't find the Echo command");
     add.hidden = v.ours || !v.dir || !!v.stuck;
     add.textContent = v.command ? t("Use this app") : t("Add to PATH");
-    // an app not named magpie.exe (the site's magpie-windows-amd64.exe,
+    // an app not named magpie.exe (the site's Echo-windows-amd64.exe,
     // #942) is given a magpie.cmd beside it that runs it
     add.title = v.windows && v.shim ? t("Puts {dir} first in your user PATH and writes magpie.cmd there, which runs {name}", { dir: v.dir || "", name: exeName(v.exe) })
-      : v.windows ? t("Puts {dir} first in your user PATH", { dir: v.dir || "" }) : t("Links magpie in {dir}", { dir: v.dir || "" });
+      : v.windows ? t("Puts {dir} first in your user PATH", { dir: v.dir || "" }) : t("Links Echo in {dir}", { dir: v.dir || "" });
     shells.replaceChildren(...(v.shells || []).map((s) => {
       const line = el("div", "cli-shell" + (s.ours ? " on" : ""));
       line.dataset.shell = s.name;
@@ -16938,7 +16938,7 @@ function renderCLI(r) {
       // hasn't gets its own profile's button
       if (!s.ours && s.profile && !v.stuck && !(s.hasDir && !add.hidden)) {
         const b = el("button", "text", t("Add to {file}", { file: s.profile }));
-        b.title = t("Adds ~/.local/bin to {file}'s PATH and links magpie there", { file: s.profile });
+        b.title = t("Adds ~/.local/bin to {file}'s PATH and links Echo there", { file: s.profile });
         b.onclick = () => go({ shell: s.name }, b);
         line.append(b);
       }
@@ -16957,7 +16957,7 @@ function renderCLI(r) {
 
 // Settings' Download source (#893): where an update's file is downloaded
 // from — GitHub, or a GitHub download mirror put before its URL, the same
-// setting `magpie update mirror` writes. magpie names no mirror of its
+// setting `magpie update mirror` writes. Echo names no mirror of its
 // own; the feed and each file's SHA-256 still come from usemagpie.ai, and a
 // file that doesn't match is never installed. A draft and its error are
 // kept across the page being drawn again.
@@ -17016,9 +17016,9 @@ function renderSettings() {
   $("#themeSegs").replaceChildren(segs(THEMES.map(([id, name]) => [id, t(name)]), s.theme, (theme) => savePrefs({ ...keep, theme })));
   $("#langSegs").replaceChildren(segs(LOCALES.map(([id, name]) => [id, t(name)]), s.lang, (lang) => savePrefs({ ...keep, lang })));
   renderGatewayMode(s);
-  // a browser tab has its own zoom, and magpie leaves it to it
+  // a browser tab has its own zoom, and Echo leaves it to it
   $("#textSizeRow").hidden = web;
-  $("#textSizeSub").textContent = t("Everything in magpie's windows, larger; {keys} too", { keys: textSizeKeys() });
+  $("#textSizeSub").textContent = t("Everything in Echo's windows, larger; {keys} too", { keys: textSizeKeys() });
   $("#textSizeSegs").replaceChildren(segs(TEXT_SIZES.map((n) => [n, n + "%"]), s.textSize || 100, (n) => setTextSize(n)));
   $("#traySegs").replaceChildren(segs(TRAYS.map(([id, name]) => [id, t(name)]), s.tray || "panel", (tray) => savePrefs({ ...keep, tray })));
   // the Dock is the Mac's; the tray and the login item the app's
@@ -17037,8 +17037,8 @@ function renderSettings() {
   // its line says what the choice does; data-en keeps a language change on it
   const awakeSub = $("#keepAwakeRow .sub");
   awakeSub.dataset.en = s.keepAwake && s.keepAwakeDisplay
-    ? "Keeps this computer from going to sleep and its display on while agents work through magpie and for ten minutes after"
-    : "Keeps this computer from going to sleep by itself while agents work through magpie and for ten minutes after; the display may still turn off";
+    ? "Keeps this computer from going to sleep and its display on while agents work through Echo and for ten minutes after"
+    : "Keeps this computer from going to sleep by itself while agents work through Echo and for ten minutes after; the display may still turn off";
   awakeSub.textContent = t(awakeSub.dataset.en);
   renderSessionTerminal(s, keep);
   renderBarIcon();
@@ -17134,7 +17134,7 @@ function renderSettings() {
   }
   // the header's Update pill, kept away for good or for one version; the
   // version row above still says what is out and offers it
-  const pill = row(t("Update button"), t("Shows in the header when a newer magpie is out"),
+  const pill = row(t("Update button"), t("Shows in the header when a newer Echo is out"),
     "", segs([["off", t("Off")], ["on", t("On")]], s.noUpdatePill ? "off" : "on", (v) => savePrefs({ ...keep, noUpdatePill: v === "off" }).then(renderUpdateBadge)));
   pill.classList.add("update-pill-row");
   if (s.updateSkip && !s.noUpdatePill) {
@@ -17146,21 +17146,21 @@ function renderSettings() {
       pill.querySelector(".val").prepend(back);
     }, () => {});
   }
-  // whether magpie asks for a newer version (and downloads it) by itself,
+  // whether Echo asks for a newer version (and downloads it) by itself,
   // and how often; off, only the version row's Check asks (#472)
-  row(t("Automatic updates"), t("Checks for a newer magpie and downloads it"),
+  row(t("Automatic updates"), t("Checks for a newer Echo and downloads it"),
     "", segs([["off", t("Off")], ["on", t("On")]], s.noAutoUpdate ? "off" : "on", (v) => savePrefs({ ...keep, noAutoUpdate: v === "off" }))).classList.add("update-auto-row");
   // kept in place while off, dimmed, its height the same (a row or a line
   // taken away would shorten the page under the click), for when they are
   // turned on again
-  row(t("Check every"), s.noAutoUpdate ? t("While automatic updates are on") : t("How often magpie looks for a newer version"), "",
+  row(t("Check every"), s.noAutoUpdate ? t("While automatic updates are on") : t("How often Echo looks for a newer version"), "",
     segs(UPDATE_EVERY.map((m) => [m, m < 60 ? t("{n} min", { n: m }) : t("{n} h", { n: m / 60 })]), s.updateEvery || 360,
       (updateEvery) => savePrefs({ ...keep, updateEvery }))).classList.add("update-every-row", ...(s.noAutoUpdate ? ["off"] : []));
   renderUpdateMirror(row(t("Download source"), "", ""), s);
   const open = el("button", "text", t("Open"));
   open.onclick = () => api("settings/reveal", {}).catch((e) => status(e.message, "err"));
-  // portable (a data folder beside magpie, #508): everything is in there
-  row(t("Config folder"), s.portable ? t("Portable: everything magpie keeps, in the data folder beside it") : t("providers, profiles and these settings"), s.dir, copyBtn(s.dir, t("Path")), open);
+  // portable (a data folder beside Echo, #508): everything is in there
+  row(t("Config folder"), s.portable ? t("Portable: everything Echo keeps, in the data folder beside it") : t("providers, profiles and these settings"), s.dir, copyBtn(s.dir, t("Path")), open);
   renderCLI(row(t("Command line"), t("Checking your shells…"), ""));
   row(t("Gateway URL"), t("the address every agent is pointed at"), s.gateway, copyBtn(s.gateway, t("Gateway URL")));
   const join = el("button", "discord");
@@ -17202,7 +17202,7 @@ function renderGatewayMode(s) {
   $("#gatewayModeSub").textContent = [t("Only what a gateway for other computers needs: no Agents, Sessions or Library, nor this computer's agents' settings"), now].filter(Boolean).join(" · ");
 }
 
-// renderNotify: the Settings page's notifications — what magpie may pop up
+// renderNotify: the Settings page's notifications — what Echo may pop up
 // about besides its own updates. Codex's resets, announced on X and tracked
 // by codex-resets.com: asked every five minutes while a Codex account is
 // signed in, one newer than the last announced pops up once.
@@ -17351,7 +17351,7 @@ async function renderSync(v) {
     // how often it syncs by itself, or never: a free 坚果云 account is
     // allowed only so many requests (#847)
     const every = v.auto ?? 3;
-    row(t("Sync by itself"), every ? t("Every {n} minutes while magpie runs", { n: every }) : t("Off: only Sync now syncs"),
+    row(t("Sync by itself"), every ? t("Every {n} minutes while Echo runs", { n: every }) : t("Off: only Sync now syncs"),
       segs([[0, t("Off")], [3, t("3 min")], [15, t("15 min")], [30, t("30 min")], [60, t("1 hour")]], every, async (m) => {
         renderSync(await api("davsync/auto", { minutes: m || -1 }).catch((x) => ({ ...v, error: x.message })));
       }));
@@ -17362,7 +17362,7 @@ async function renderSync(v) {
   // export and import
   row(t("Export"), t("Everything above in one file, sealed with a passphrase, to carry to another computer"), btn(t(syncOpen === "export" ? "Close" : "Export…"), toggle("export")));
   if (syncOpen === "export") box.append(exportForm());
-  row(t("Import"), t("Bring in a file exported from magpie"), btn(t(syncOpen === "import" ? "Close" : "Import…"), toggle("import")));
+  row(t("Import"), t("Bring in a file exported from Echo"), btn(t(syncOpen === "import" ? "Close" : "Import…"), toggle("import")));
   if (syncOpen === "import") box.append(importForm());
 }
 
@@ -17471,12 +17471,12 @@ function davForm(v) {
   const [useL, use] = tick(t("Usage: this computer's calls, for the Usage page on the others"), !!v.usage);
   const what = el("div", "stack");
   what.append(keysL, agentsL, libL, useL);
-  const davFields = [...field(t("Address"), url, t("A folder named magpie is made in it.")),
+  const davFields = [...field(t("Address"), url, t("A folder named Echo is made in it.")),
     ...field(t("User"), user),
     ...field(t("Password"), pass)];
   const s3Fields = [...field(t("Endpoint"), endpoint, t("Empty for AWS S3; for R2, B2, MinIO and the like, their S3 API address.")),
     ...field(t("Bucket"), bucket),
-    ...field(t("Prefix"), prefix, t("The backup goes in a folder named magpie under it.")),
+    ...field(t("Prefix"), prefix, t("The backup goes in a folder named Echo under it.")),
     ...field(t("Region"), region),
     ...field(t("Access key"), keyID),
     ...field(t("Secret"), secret),
@@ -17562,7 +17562,7 @@ function importForm() {
   let data = "";
   const file = el("input");
   file.type = "file";
-  file.accept = ".magpie-backup";
+  file.accept = ".Echo-backup";
   file.hidden = true;
   const name = el("span", "fname", t("No file chosen"));
   const pick = el("button", "text", t("Choose…"));
@@ -17654,7 +17654,7 @@ function renderTrayUsage(s, keep) {
   renderAlerts(s, keep);
   $("#plainNamesSegs").replaceChildren(suffixSegs());
   // Codex's OpenAI models in multi-agent V1, so their subagents can run on
-  // magpie's other models (#141)
+  // Echo's other models (#141)
   $("#codexAgentsV1Segs").replaceChildren(segs([["off", t("Off")], ["on", t("On")]], s.codexAgentsV1 ? "on" : "off", (v) =>
     writingPrefs(api("settings/codex-agents-v1", { on: v === "on" })).then((ns) => { prefs = ns; renderSettings(); }).catch((e) => { status(t(e.message), "err"); renderSettings(); })));
   // a 1M model's whole window, or compacting at the working one (X: Chen,
@@ -17688,8 +17688,8 @@ function renderTrayUsage(s, keep) {
   $("#trayUsageRow").hidden = web;
   if (web) return;
   const mac = document.body.classList.contains("mac");
-  $("#trayUsageSub").textContent = mac ? t("Show your subscriptions' allowances beside magpie's icon in the menu bar, side by side, refreshed every few minutes")
-    : t("Show your subscriptions' allowances when pointing at magpie's tray icon, refreshed every few minutes");
+  $("#trayUsageSub").textContent = mac ? t("Show your subscriptions' allowances beside Echo's icon in the menu bar, side by side, refreshed every few minutes")
+    : t("Show your subscriptions' allowances when pointing at Echo's tray icon, refreshed every few minutes");
   const ids = s.trayUsages || (s.trayUsage ? [s.trayUsage] : []);
   const pill = el("button", "proto pick" + (ids.length ? " set" : ""));
   pill.type = "button";
@@ -17729,16 +17729,16 @@ function renderTrayUsage(s, keep) {
   $("#trayLogosRow").hidden = !ids.length || !mac;
   $("#trayLogosSegs").replaceChildren(segs([["off", t("Off")], ["on", t("On")]], s.trayNoLogos ? "off" : "on",
     (v) => savePrefs({ ...keep, trayNoLogos: v === "off" })));
-  // and beside magpie's icon or alone
+  // and beside Echo's icon or alone
   $("#trayBirdRow").hidden = !ids.length || !mac;
   $("#trayBirdSegs").replaceChildren(segs([["off", t("Off")], ["on", t("On")]], s.trayNoBird ? "off" : "on",
     (v) => savePrefs({ ...keep, trayNoBird: v === "off" })));
 }
 const TRAY_EVERY = [1, 3, 5, 10, 30];
-// how often magpie checks for updates by itself, in minutes (settings.UpdateEveries)
+// how often Echo checks for updates by itself, in minutes (settings.UpdateEveries)
 const UPDATE_EVERY = [30, 60, 360, 1440];
 
-// renderProxy: magpie's own requests to vendors, and its update checks, follow the system proxy on
+// renderProxy: Echo's own requests to vendors, and its update checks, follow the system proxy on
 // their own; this row says which one, and lets it be turned off or set.
 let proxyCustom = false; // Custom picked, nothing typed yet
 function renderProxy(s, keep) {
@@ -17816,7 +17816,7 @@ function renderGitHubToken(s) {
   i.oninput = () => { githubTokenDraft = i.value; };
   i.onkeydown = (e) => { e.stopPropagation(); if (e.key === "Enter") save.onclick(); };
   const get = el("button", "link", t("Create one ↗"));
-  get.onclick = () => api("open", { url: "https://github.com/settings/tokens/new?description=magpie" }).catch(() => {});
+  get.onclick = () => api("open", { url: "https://github.com/settings/tokens/new?description=Echo" }).catch(() => {});
   val.append(i, get, save);
 }
 
@@ -17899,7 +17899,7 @@ function renderWarmAtOwn(s) {
 // that routing counts reaches the share set, or a balance falls to the
 // amount set, each once; Off, or the number in a field beside On.
 function renderAlerts(s, keep) {
-  const problem = s.notifyProblem === "denied" ? t("Notifications are turned off for magpie in the system's settings")
+  const problem = s.notifyProblem === "denied" ? t("Notifications are turned off for Echo in the system's settings")
     : s.notifyProblem === "unavailable" ? t("Notifications can't be shown on this system") : "";
   const sub = (id, what) => {
     const box = $(id);
@@ -17946,7 +17946,7 @@ function renderAlerts(s, keep) {
 
 // renderCodexTitles: where Codex's requests for a thread's title go (#705)
 // — as Codex sends them, to its own model through its ChatGPT sign-in; off,
-// answered by magpie with no title; or to a model of magpie's — set on its
+// answered by Echo with no title; or to a model of Echo's — set on its
 // own, as Codex's subagents are.
 function renderCodexTitles(s) {
   const models = s.titleModels || [];
@@ -17955,9 +17955,9 @@ function renderCodexTitles(s) {
     return m ? `${m.name || m.id} · ${m.providerName}` : id;
   };
   const v = s.codexTitles || "";
-  $("#codexTitlesSub").textContent = v === "off" ? t("Codex’s title requests are answered by magpie with no title and sent nowhere; new threads stay unnamed")
+  $("#codexTitlesSub").textContent = v === "off" ? t("Codex’s title requests are answered by Echo with no title and sent nowhere; new threads stay unnamed")
     : v ? t("Codex’s title requests go to this model, not to its ChatGPT sign-in; the Usage and Routing views still show them as titles")
-    : t("Codex asks its own model for each thread’s title through its ChatGPT sign-in, even while the conversation is on magpie’s models");
+    : t("Codex asks its own model for each thread’s title through its ChatGPT sign-in, even while the conversation is on Echo’s models");
   const b = el("button", "rt-cond on");
   b.type = "button";
   b.setAttribute("aria-label", t("Codex thread titles"));
@@ -17979,7 +17979,7 @@ function renderCodexTitles(s) {
 // renderCodexAutoReview: the model Codex's auto-review — the reviewer that
 // decides an approval in the user's place — runs on (#938): Codex's own pick
 // (its codex-auto-review, else the conversation's model), or a model of
-// magpie's named in every entry of the list magpie hands Codex.
+// Echo's named in every entry of the list Echo hands Codex.
 function renderCodexAutoReview(s) {
   const models = s.titleModels || [];
   const v = s.codexAutoReview || "";
@@ -18028,7 +18028,7 @@ function renderCodexMemories() {
 }
 
 // renderImages: the model that describes images to a model that can't see
-// them — the one magpie picks, one named, or none, and then such an image
+// them — the one Echo picks, one named, or none, and then such an image
 // is turned away.
 function renderImages(s, keep) {
   const box = $("#imagesList");
@@ -18067,8 +18067,8 @@ function renderImages(s, keep) {
   renderImageGen(s, keep, box);
 }
 
-// renderImageGen: the model magpie's generate_image tool draws with — the
-// one magpie picks, one named, or none — and where agents are given the tool.
+// renderImageGen: the model Echo's generate_image tool draws with — the
+// one Echo picks, one named, or none — and where agents are given the tool.
 function renderImageGen(s, keep, box) {
   const models = s.imageGenModels || [];
   const named = (id) => {
@@ -18080,8 +18080,8 @@ function renderImageGen(s, keep, box) {
   const r = el("div", "row pref");
   const who = el("div", "who");
   const sub = el("div", "sub",
-    v === "off" ? t("Agents given Magpie Image can't generate images or videos: the tool says it is off")
-    : t("The model Magpie Image draws with. Give an agent the tool from Library → MCP servers → Discover → Magpie Image; images are saved in its project"));
+    v === "off" ? t("Agents given Echo Image can't generate images or videos: the tool says it is off")
+    : t("The model Echo Image draws with. Give an agent the tool from Library → MCP servers → Discover → Echo Image; images are saved in its project"));
   who.append(el("div", "name", t("Image generation")), sub);
   const b = el("button", "rt-cond on");
   if (v === "off") b.append(el("span", "", t("Off")));
@@ -18107,7 +18107,7 @@ function renderImageGen(s, keep, box) {
 // renderSearch: the web search APIs a model's search goes to when no
 // provider can search (#419) — one row each, in the order they are tried,
 // and a row to add one: which API, its key, and the address of one the user
-// runs (SearXNG). They are set on their own; one magpie refuses is said in
+// runs (SearXNG). They are set on their own; one Echo refuses is said in
 // the row, what was typed kept.
 let searchDraft = { vendor: "tavily", key: "", url: "", err: "" };
 function renderSearch(s, keep) {
@@ -18171,7 +18171,7 @@ function renderSearch(s, keep) {
   const by = !s.searchProvider ? t("No provider can search, so these are asked")
     : apiFirst ? t("Asked before {who}, which searches when these fail", { who: s.searchProvider })
     : t("Now done by {who}; these come after it", { who: s.searchProvider });
-  const head = row(t("Search APIs"), d.err || t("When a model can't search the web, magpie searches for it with these, in this order, and gives it what they found") + " · " + by,
+  const head = row(t("Search APIs"), d.err || t("When a model can't search the web, Echo searches for it with these, in this order, and gives it what they found") + " · " + by,
     pick, key, url, get, add);
   head.classList.add("rule-row", "search-add");
   head.querySelector(".val").classList.add("rule-add");
@@ -18217,9 +18217,9 @@ function renderSearch(s, keep) {
 }
 
 // renderSearcher: the provider that searches the web for a model that
-// can't — the one magpie picks, or one named, by itself (its small model)
+// can't — the one Echo picks, or one named, by itself (its small model)
 // or with a model of it. One named that is gone, off or can't search gives
-// way to magpie's pick, which the row says. Relays said to search can be
+// way to Echo's pick, which the row says. Relays said to search can be
 // named, but are never picked automatically (#359), and the row says so.
 function renderSearcher(s, keep, box) {
   const choices = s.searchChoices || [];
@@ -18236,10 +18236,10 @@ function renderSearcher(s, keep, box) {
   const icOf = (id) => choices.find((x) => x.id === id.split("/")[0])?.icon;
   const r = el("div", "row pref searcher-row");
   const who = el("div", "who");
-  const sub = el("div", "sub", t("When a model can't search the web directly, the selected provider searches for it and returns the results. Searches may use the service's quota or incur charges; if a search fails, magpie tries other available sources."));
+  const sub = el("div", "sub", t("When a model can't search the web directly, the selected provider searches for it and returns the results. Searches may use the service's quota or incur charges; if a search fails, Echo tries other available sources."));
   if (v && s.searchUnused) {
-    const why = { gone: t("it is no longer in magpie"), off: t("it is turned off"), cant: t("it can't search the web by itself"), nomodel: t("it lists no model") }[s.searchUnused] || s.searchUnused;
-    sub.append(" · ", el("span", "warn searcher-unused", t("{who} isn't used: {why}, so magpie picks one", { who: named(v), why })));
+    const why = { gone: t("it is no longer in Echo"), off: t("it is turned off"), cant: t("it can't search the web by itself"), nomodel: t("it lists no model") }[s.searchUnused] || s.searchUnused;
+    sub.append(" · ", el("span", "warn searcher-unused", t("{who} isn't used: {why}, so Echo picks one", { who: named(v), why })));
   }
   const plans = choices.filter((c) => c.service).map((c) => c.name);
   if (plans.length) sub.append(" · ", el("span", "searcher-own",
@@ -18271,8 +18271,8 @@ function renderSearcher(s, keep, box) {
     }
     // its small model is offered once (Player on Discord): the model of the
     // same name below it searched just the same, "<provider>/<small>" being
-    // that model named rather than magpie's pick, so a pick saved so is
-    // ticked here. No "via magpie": no agent asks for these
+    // that model named rather than Echo's pick, so a pick saved so is
+    // ticked here. No "via Echo": no agent asks for these
     const small = c.small ? `${c.id}/${c.small}` : "";
     options.push({ value: v === small ? small : c.id, label: t("{model}, its small model", { model: c.smallName || c.small }), note: c.name, icon: c.icon, group: c.name });
     for (const m of c.models) if (m.id !== small) options.push({ value: m.id, label: m.name || m.id, note: c.name, icon: c.icon, group: c.name });
@@ -18285,7 +18285,7 @@ function renderSearcher(s, keep, box) {
   box.append(r);
 }
 
-// renderReplies: whether a reply's model names the member of magpie's
+// renderReplies: whether a reply's model names the member of Echo's
 // that answered it (#822), for agents that count usage by it.
 function renderReplies(s, keep) {
   const box = $("#replyList");
@@ -18294,7 +18294,7 @@ function renderReplies(s, keep) {
   r.id = "memberModelRow";
   const who = el("div", "who");
   who.append(el("div", "name", t("Name the member in replies")),
-    el("div", "sub", t("A reply's model says magpie's provider/model that answered (workbuddy/glm-5.3-flash), not the vendor's own name, for agents that count usage by it. Claude Code, Claude Desktop and Codex keep the vendor's; the X-Magpie-Model header says it to every agent")));
+    el("div", "sub", t("A reply's model says Echo's provider/model that answered (workbuddy/glm-5.3-flash), not the vendor's own name, for agents that count usage by it. Claude Code, Claude Desktop and Codex keep the vendor's; the X-Magpie-Model header says it to every agent")));
   const val = el("div", "val");
   val.append(segs([["off", t("Off")], ["on", t("On")]], s.memberModel ? "on" : "off",
     (v) => savePrefs({ ...keep, memberModel: v === "on" })));
@@ -18341,7 +18341,7 @@ function renderRedact(s, keep) {
   i.onblur = save;
   row(t("Masked words"), t("Your own words to keep from vendors, separated by commas"), i);
   renderRedactRules(s, row);
-  row(t("Count me as a user"), t("Once a day, a random id for this computer with magpie's version and system — nothing you use magpie for"),
+  row(t("Count me as a user"), t("Once a day, a random id for this computer with Echo's version and system — nothing you use Echo for"),
     onOff(!s.noStats, (on) => savePrefs({ ...keep, noStats: !on })));
 }
 
@@ -18394,7 +18394,7 @@ function renderOTel(s, keep) {
   section("Export scope");
   row("otelMetricsRow", "Export metrics", "Also send duration and token histograms. Leave off for a traces-only service such as Langfuse",
     segs([["off", t("Off")], ["on", t("On")]], config.metrics ? "on" : "off", (v) => save({ metrics: v === "on" })));
-  row("otelSessionsRow", "Trace agent conversations", "Reads all local sessions from Codex, Pi, Oh My Pi, Claude Code, Cowork, OpenCode and Gemini CLI, including calls not routed through Magpie. When content is included below, exports prompts, replies, tool arguments and tool output (including file contents and command output), with secrets masked",
+  row("otelSessionsRow", "Trace agent conversations", "Reads all local sessions from Codex, Pi, Oh My Pi, Claude Code, Cowork, OpenCode and Gemini CLI, including calls not routed through Echo. When content is included below, exports prompts, replies, tool arguments and tool output (including file contents and command output), with secrets masked",
     segs([["off", t("Off")], ["on", t("On")]], config.sessions ? "on" : "off", (v) => save({ sessions: v === "on" })));
   section("Trace content");
   const mode = !config.bodies ? "metadata" : config.bodiesWhole ? "full" : "limited";
@@ -18417,10 +18417,10 @@ function renderOTel(s, keep) {
   if (s.otelEnv) box.append(el("div", "sub otel-env", t("Environment variables override these saved OTLP preferences")));
 }
 
-// renderRedactRules: the user's own rules for secrets magpie's don't know, a
+// renderRedactRules: the user's own rules for secrets Echo's don't know, a
 // gateway's oc_sk_… key say (#195) — one row each, and a row to add one by a
 // prefix or a regular expression. They are set on their own, all of them each
-// time, so one magpie can't use (a pattern that doesn't compile) is said in
+// time, so one Echo can't use (a pattern that doesn't compile) is said in
 // the row, what was typed kept, and the rest stay as they were.
 let ruleDraft = { kind: "", by: "prefix", match: "", err: "" };
 function renderRedactRules(s, row) {
@@ -18446,7 +18446,7 @@ function renderRedactRules(s, row) {
     i.oninput = () => { d.kind = kind.value; d.match = match.value; };
     i.onkeydown = (e) => { e.stopPropagation(); if (e.key === "Enter") add.onclick(); };
   }
-  row(t("Masking rules"), d.err || t("Secrets magpie doesn't know, such as a gateway's own keys: what they start with, or a regular expression. Masked while Mask secrets is on"),
+  row(t("Masking rules"), d.err || t("Secrets Echo doesn't know, such as a gateway's own keys: what they start with, or a regular expression. Masked while Mask secrets is on"),
     kind, by, match, add);
   // its words above in full, the fields on a line of their own under them
   const head = $("#redactList").lastElementChild;
@@ -18463,7 +18463,7 @@ function renderRedactRules(s, row) {
 
 // renderPort: the gateway's port on this computer (Magic_zero on Discord:
 // 3425 taken by another program, or one easier to tell apart). Any port
-// from 1024 up can be typed; magpie moves its gateway there and every
+// from 1024 up can be typed; Echo moves its gateway there and every
 // agent it connected with it, or says why it can't (another program has
 // it). MAGPIE_ADDR, set, comes first and the field says so.
 let portDraft = { value: null, err: "" };
@@ -18472,7 +18472,7 @@ let portDraft = { value: null, err: "" };
 function portSays(m) {
   let x;
   if ((x = /^port (\d+) is in use by another program/.exec(m))) return t("Port {p} is in use by another program: pick another one", { p: x[1] });
-  if ((x = /^another magpie serves the gateway at (\S+):/.exec(m))) return t("Another magpie serves the gateway at {url}: set its port there, or quit it first", { url: x[1] });
+  if ((x = /^another Echo serves the gateway at (\S+):/.exec(m))) return t("Another Echo serves the gateway at {url}: set its port there, or quit it first", { url: x[1] });
   if (/from 1024 to 65535/.test(m)) return t("A port is a number from 1024 to 65535");
   return t(m);
 }
@@ -18496,7 +18496,7 @@ function renderPort(s) {
   } else if (d.err) {
     sub.textContent = d.err;
     sub.classList.add("err");
-  } else sub.textContent = t("Agents magpie connected move with it. Now {url}", { url: s.gateway || "" });
+  } else sub.textContent = t("Agents Echo connected move with it. Now {url}", { url: s.gateway || "" });
   who.append(sub);
   save.onclick = () => {
     const p = Number(field.value.trim());
@@ -18544,11 +18544,11 @@ function renderLAN(s) {
   };
   const set = (body) => writingPrefs(api("settings/lan", body)).then((ns) => { prefs = ns; renderSettings(); })
     .catch((e) => { status(t(e.message), "err"); renderSettings(); });
-  row(t("Share on local network"), t("Agents on other computers on this network can use magpie’s models with a gateway key from Gateway"), "",
+  row(t("Share on local network"), t("Agents on other computers on this network can use Echo’s models with a gateway key from Gateway"), "",
     segs([["off", t("Off")], ["on", t("On")]], s.lan ? "on" : "off", (v) => set({ on: v === "on" })));
   if (!s.lan) return;
   let urls = s.lanURLs || [], sub = "";
-  // in a container magpie finds only the container's own addresses; the
+  // in a container Echo finds only the container's own addresses; the
   // page opened over the network was reached at the host's, so the
   // gateway is offered there, on its port
   if (s.lanContainer) {
@@ -18594,7 +18594,7 @@ function renderLAN(s) {
   if (sub) row(t("In a container"), sub, "").classList.add("lan-container");
 }
 
-// renderUpdate fills in the version row: whether a newer magpie is out.
+// renderUpdate fills in the version row: whether a newer Echo is out.
 // The app checks and downloads on its own, so usually the row just offers
 // the restart; a check can also be asked for. That check leaves the button
 // where it is, dimmed, and a second click does nothing. A read still out
@@ -18680,7 +18680,7 @@ async function renderUpdate(r, u) {
         }, 1000);
         break;
       }
-      if (u.gaveUp) sub.textContent += " · " + t("the gateway stayed busy for an hour, so magpie didn't restart; it updates when you restart or quit it");
+      if (u.gaveUp) sub.textContent += " · " + t("the gateway stayed busy for an hour, so Echo didn't restart; it updates when you restart or quit it");
       else if (busyNow) sub.textContent += " · " + busyNow;
       if (u.gaveUp) sub.classList.add("wraps");
       btn(t("Restart to update"), () => (u.error ? install() : confirmUpdate(u, () => install())));
@@ -18739,8 +18739,8 @@ async function renderUpdate(r, u) {
       // it again; Check tries it once more.
       const b = u.blocked || {};
       sub.textContent = b.policy
-        ? t("{v} didn't start on this computer: Windows' Smart App Control (or another app control policy) blocked the new version, which isn't signed. magpie stays on {cur}. Download it and run it yourself, or turn Smart App Control off and check again", { v: u.latest || b.version, cur: u.current })
-        : t("{v} didn't start on this computer, so magpie stays on {cur}", { v: u.latest || b.version, cur: u.current }) + (b.error ? " · " + b.error : "");
+        ? t("{v} didn't start on this computer: Windows' Smart App Control (or another app control policy) blocked the new version, which isn't signed. Echo stays on {cur}. Download it and run it yourself, or turn Smart App Control off and check again", { v: u.latest || b.version, cur: u.current })
+        : t("{v} didn't start on this computer, so Echo stays on {cur}", { v: u.latest || b.version, cur: u.current }) + (b.error ? " · " + b.error : "");
       sub.title = b.error || u.error || "";
       sub.classList.add("wraps");
       if (u.url) btn(t("Download"), () => (web ? window.open(u.url, "_blank", "noopener") : api("open", { url: u.url })));
@@ -18855,7 +18855,7 @@ let purposeUntil = 0, held = null;
 const readerScrolls = (ms) => { quotaFocus = ""; purposeUntil = Math.max(purposeUntil, performance.now() + ms); held = null; };
 function scrollOnPurpose(e, ms = 1000) {
   if (!e?.isTrusted || performance.now() - e.timeStamp > 1000) {
-    console.warn("magpie: a scroll not asked for by the reader was refused");
+    console.warn("Echo: a scroll not asked for by the reader was refused");
     return false;
   }
   readerScrolls(ms);
@@ -19160,9 +19160,9 @@ $("#prefs").onclick = () => { openSettings(); $("#prefs").blur(); };
 
 // The header's refresh reads again what the page shown draws (#844): on
 // Agents it looks for the agents on this computer again (one just installed
-// or removed, or its settings changed outside magpie), on Usage it reads the
+// or removed, or its settings changed outside Echo), on Usage it reads the
 // usage and the allowances now, and elsewhere it refreshes the model lists.
-// A newer magpie is looked for on its own, and from Settings › About's Check.
+// A newer Echo is looked for on its own, and from Settings › About's Check.
 function refreshKind() {
   if (mode === "panel") return { agents: "agents", usage: "allowances", stats: "requests" }[panelTab] || "models";
   return { agents: "agents", usage: "usage" }[view] || "models";
@@ -19241,9 +19241,9 @@ if (mode === "window") { $("#open").remove(); $("#openMain").remove(); $("#quit"
 else { $("#nav").remove(); }
 if (mode !== "window" || !document.body.classList.contains("linux")) $("#winclose").remove();
 
-// Config files may change underneath us (another magpie, an editor); reload when
+// Config files may change underneath us (another Echo, an editor); reload when
 // the panel comes back into view.
-// The magpie in the corner flaps and wags its tail as the window opens and
+// The Echo in the corner flaps and wags its tail as the window opens and
 // when the pointer comes over it.
 function wag() {
   const logo = document.querySelector(".brand .logo");
@@ -19255,7 +19255,7 @@ document.querySelector(".brand")?.addEventListener("mouseenter", wag);
 setTimeout(wag, 250);
 
 // magpie web on a phone, or a browser as narrow: the header is two rows,
-// the magpie and the icons over the tabs, which scroll sideways when they
+// the Echo and the icons over the tabs, which scroll sideways when they
 // don't fit, the one open kept in sight
 function phoneWeb() { return document.body.classList.contains("web") && matchMedia("(max-width: 760px), (pointer: coarse) and (max-width: 1024px)").matches; }
 function navInSight() {
@@ -19268,7 +19268,7 @@ function navInSight() {
 matchMedia("(max-width: 760px), (pointer: coarse) and (max-width: 1024px)").addEventListener?.("change", () => { fitTop(); navInSight(); });
 
 // A narrow window has no room for the whole header: the name goes, leaving
-// the magpie, and Update becomes its arrow; narrower still, the tabs stop
+// the Echo, and Update becomes its arrow; narrower still, the tabs stop
 // centring and take the room between, and at the narrowest they draw in,
 // further still when they don't fit (the 560px window at 150%).
 function fitTop() {
@@ -19314,7 +19314,7 @@ if (mode === "window") new ResizeObserver(() => {
 document.fonts?.ready.then(fitTop);
 
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { load(); wag(); } });
-// an agent's config can be rewritten, or the agent run round magpie, while the
+// an agent's config can be rewritten, or the agent run round Echo, while the
 // window is up: ask what drifted now and then, and redraw only on a change —
 // never under an open menu
 setInterval(async () => {
@@ -19455,7 +19455,7 @@ setInterval(renderPluginDot, 15 * 60 * 1000);
 // swapped for blurred stand-in letters while it's on, as the page redraws
 // too; the account itself is kept aside to put back.
 //
-// accountNames are the names of subscription accounts magpie has told the
+// accountNames are the names of subscription accounts Echo has told the
 // page of (noteAccounts, from what the API answered), beside the accounts
 // of the providers and allowances it holds now.
 const accountNames = new Set();

@@ -25,7 +25,7 @@ function settingsPayload(over) {
     dock: false, dockWindow: false, proxy: "", redact: false, redactPersonal: false, redactWords: [],
     codexWarmup: "", claudeWarmup: "", codexWarmAt: "", claudeWarmAt: "", workbuddyCheckin: false, noStats: false,
     trayUsage: "", trayUsageEvery: 3, vision: "", imageGen: "",
-    version: "0.1.400", dir: "/config/home/.config/magpie", gateway: "http://127.0.0.1:3425",
+    version: "0.1.400", dir: "/config/home/.config/Echo", gateway: "http://127.0.0.1:3425",
     proxyNow: "none", proxySource: "none", login: false,
     visionModels: [], imageGenModels: [], workbuddyCheckins: [], lanURLs: [],
     fx: { rate: 7.2, at: new Date().toISOString(), stale: false },
@@ -33,7 +33,7 @@ function settingsPayload(over) {
   };
 }
 
-// agents says whether magpie found agents here: Automatic is on without
+// agents says whether Echo found agents here: Automatic is on without
 function server(lang, posts, { web = true, gateway = true, agents = false } = {}) {
   const why = (mode) => (mode === "on" || mode === "off" ? mode : agents ? "" : "no-agents");
   const on = (mode) => web && (mode === "on" || (mode !== "off" && !agents));

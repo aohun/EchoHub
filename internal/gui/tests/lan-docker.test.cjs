@@ -1,6 +1,6 @@
 // Run with Node's test runner and Playwright on the module path; see README.md.
-// Share on local network in a container (莫 on Discord: magpie in Docker on
-// a NAS showed the container's own 172.17.x address): the addresses magpie
+// Share on local network in a container (莫 on Discord: Echo in Docker on
+// a NAS showed the container's own 172.17.x address): the addresses Echo
 // finds for itself there are the container's, which other devices can't
 // reach. Served over the network (magpie web), the page offers the host it
 // was opened at, on the gateway's port, and says so; opened at localhost it
@@ -22,7 +22,7 @@ function settingsPayload(over) {
     dock: false, dockWindow: false, proxy: "", redact: false, redactPersonal: false, redactWords: [],
     codexWarmup: "", claudeWarmup: "", codexWarmAt: "", claudeWarmAt: "", workbuddyCheckin: false, noStats: false,
     trayUsage: "", trayUsageEvery: 3, vision: "", imageGen: "",
-    version: "0.1.400", dir: "/config/magpie", gateway: "http://0.0.0.0:3425",
+    version: "0.1.400", dir: "/config/Echo", gateway: "http://0.0.0.0:3425",
     proxyNow: "none", proxySource: "none", login: false,
     visionModels: [], imageGenModels: [], workbuddyCheckins: [],
     lan: true, lanKey: "sk-magpie-0123456789abcdef", lanURLs: ["http://172.17.0.2:3425"],

@@ -18,7 +18,7 @@ function settingsPayload(lang, noResetAlert) {
     dock: false, dockWindow: false, proxy: "", redact: false, redactPersonal: false, redactWords: [],
     codexWarmup: "", claudeWarmup: "", codexWarmAt: "", claudeWarmAt: "", workbuddyCheckin: false, noStats: false,
     trayUsage: "", trayUsageEvery: 3, vision: "", imageGen: "",
-    version: "0.1.400", dir: "~/.config/magpie", gateway: "http://127.0.0.1:3425",
+    version: "0.1.400", dir: "~/.config/Echo", gateway: "http://127.0.0.1:3425",
     proxyNow: "none", proxySource: "none", login: false,
     visionModels: [], imageGenModels: [], workbuddyCheckins: [], lanURLs: [],
     fx: { rate: 7.2, at: new Date().toISOString(), stale: false },
@@ -62,7 +62,7 @@ const reset = {
   show: true,
   reset: {
     id: "2106131810921136451", type: "regular", announced: "2026-10-02T21:18:48.000Z",
-    text: "Reset all propagated. Enjoy. `magpie plugin off` too.", url: "https://x.com/thsottiaux/status/2106131810921136451",
+    text: "Reset all propagated. Enjoy. `Echo plugin off` too.", url: "https://x.com/thsottiaux/status/2106131810921136451",
   },
 };
 
@@ -98,7 +98,7 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
         await modal.locator("b", { hasText: title }).waitFor();
         const meta = await modal.locator(".wn-ver").textContent();
         assert.equal(meta.startsWith(lang === "en" ? "Regular reset · " : "定期重置 · "), true, "the kind and when: " + meta);
-        assert.equal(await modal.locator("code").textContent(), "magpie plugin off");
+        assert.equal(await modal.locator("code").textContent(), "Echo plugin off");
         assert.equal(await modal.locator("a", { hasText: view }).count(), 1, "the post is linked");
         assert.equal(await modal.locator("a", { hasText: from }).count(), 1, "the site credited");
         await modal.locator("button", { hasText: close }).click();
@@ -159,7 +159,7 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
         await tryBtn.click();
         const modal = page.locator("#modal .whatsnew");
         await modal.locator("b", { hasText: title }).waitFor();
-        assert.equal(await modal.locator("code").textContent(), "magpie plugin off");
+        assert.equal(await modal.locator("code").textContent(), "Echo plugin off");
         await modal.locator("button", { hasText: close }).click();
         await page.waitForFunction(() => document.querySelector("#modal").hidden);
         assert.deepEqual(posted, ["test"], "asked, not announced");

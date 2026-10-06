@@ -1,9 +1,9 @@
 // Run with Node's test runner and Playwright on the module path; see README.md.
 // Another computer's quotas (莫 on Discord): a computer whose provider is
-// another's magpie (remote-magpie) shows that magpie's cards, each named
+// another's Echo (remote-Echo) shows that Echo's cards, each named
 // with the computer ("Codex · Office"), without the buttons that would act
 // on this computer's accounts. The remote's own card says why it has none
-// (nothing read there yet, or a magpie too old to share) in the reader's
+// (nothing read there yet, or a Echo too old to share) in the reader's
 // language, and its refresh asks for it by its id (?provider=office), the
 // remote's card by its own (?provider=office/codex). English, Chinese,
 // Japanese and German; no backend, the API is faked here.
@@ -24,9 +24,9 @@ function fixtures(now) {
     { provider: "office/codex", name: "Codex · Office", icon: "openai", plan: "Pro", user: "a@x.com", from: "Office", kind: "subscription", readAt: iso(now - 40 * M),
       windows: [{ name: "5 hours", used: 30, resetsAt: iso(now + 2 * H) }] },
     { provider: "home", name: "Home", icon: "magpie", from: "Home", kind: "subscription", windows: [],
-      error: "nothing read on that magpie yet; refresh to have it read" },
+      error: "nothing read on that Echo yet; refresh to have it read" },
     { provider: "attic", name: "Attic", icon: "magpie", from: "Attic", kind: "subscription", windows: [],
-      error: "remote magpie doesn't share its quotas; update magpie on that computer" },
+      error: "remote Echo doesn't share its quotas; update Echo on that computer" },
   ];
 }
 
@@ -62,10 +62,10 @@ function serve(lang, state) {
 }
 
 const words = {
-  en: { none: "Nothing read on that computer yet — refresh this card to have it read", old: "That computer's magpie doesn't share its quotas yet — update magpie there" },
-  zh: { none: "那台电脑还没有读过额度 — 刷新这张卡片让它读取", old: "那台电脑的 magpie 还不能共享额度 — 请在那台电脑上更新 magpie" },
-  ja: { none: "そのコンピューターではまだ読み取っていません — このカードを更新すると読み取ります", old: "そのコンピューターの magpie はまだ利用枠を共有できません — そちらの magpie を更新してください" },
-  de: { none: "Auf diesem Computer wurde noch nichts gelesen — diese Karte aktualisieren, um es lesen zu lassen", old: "Das magpie dieses Computers teilt seine Kontingente noch nicht — aktualisiere magpie dort" },
+  en: { none: "Nothing read on that computer yet — refresh this card to have it read", old: "That computer's Echo doesn't share its quotas yet — update Echo there" },
+  zh: { none: "那台电脑还没有读过额度 — 刷新这张卡片让它读取", old: "那台电脑的 Echo 还不能共享额度 — 请在那台电脑上更新 Echo" },
+  ja: { none: "そのコンピューターではまだ読み取っていません — このカードを更新すると読み取ります", old: "そのコンピューターの Echo はまだ利用枠を共有できません — そちらの Echo を更新してください" },
+  de: { none: "Auf diesem Computer wurde noch nichts gelesen — diese Karte aktualisieren, um es lesen zu lassen", old: "Das Echo dieses Computers teilt seine Kontingente noch nicht — aktualisiere Echo dort" },
 };
 
 for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium", "webkit"])) {
