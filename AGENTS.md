@@ -4,11 +4,53 @@
 
 This repo is EchoHub, a second development on top of
 [yetone/magpie](https://github.com/yetone/magpie). **Every new development
-task starts by syncing upstream**: `git fetch origin` (origin is the
-upstream), merge its `main` into this line of work, and resolve the
+task starts by syncing upstream**: `git fetch upstream` (the `upstream`
+remote points at yetone/magpie; `origin` is this EchoHub repo, not the
+upstream), merge `upstream/main` into this line of work, and resolve the
 conflicts — our features live beside upstream's changes, and a task begun
 on stale code merges the harder later. Only after the sync is clean do the
 task's own changes begin.
+
+## The Echo rename
+
+EchoHub's product name in what users read is **Echo**, not magpie. Upstream
+still says magpie everywhere, so every merge re-introduces the word: renames
+belong in the merge commit itself, not a follow-up.
+
+Renamed, when a merge brings them in or touches them: `magpie`/`Magpie` as
+the product's name in what a user sees — the `t()` strings of
+`internal/gui/assets/app.js` and the other pages' js, the same strings as
+keys and values in `i18n.js`, `index.html`, and the browser tests' UI-text
+assertions in `internal/gui/tests/*.test.cjs` (a test asserts what the
+interface now says).
+
+Left as magpie — renaming them breaks the app or fights every later merge:
+
+- the Go module path `github.com/yetone/magpie` and every import of it;
+- the `magpie` command and its usage strings (`magpie web`, `magpie
+  serve`, `magpie quota`…), and the Go window title — the binary keeps
+  its name;
+- the provider the app writes into agents' configs, `{ID: "magpie", …}`
+  in `internal/agent/agents.go`, everything compared against it (e.g.
+  `o.value === "magpie"` in app.js), and every fixture or assertion that
+  mirrors it (`value: "magpie"`, `id: "magpie"`, `icon: "magpie"`,
+  `how: "magpie"`, `providers.magpie`…);
+- the `X-Magpie-*` response headers, the `magpie://` link scheme, the
+  `MAGPIE_ADDR`/`MAGPIE_PUBLIC_URL` environment variables, the
+  `not-magpie` takeover reason, the `magpie.*` localStorage keys, the
+  `~/.config/magpie/…` and `~/Library/Application Support/magpie/…` data
+  paths, the `.magpie-backup` extension, the `sk-magpie-…` key prefixes,
+  `usemagpie.ai`, `magpie.svg`, and the `@magpie-community/…` npm names;
+- `internal/gui/tests/fixtures/` (they mirror Go's values), Go comments,
+  README, docs/ and site/.
+
+After a merge, sweep for what slipped through:
+
+    grep -rni magpie internal/gui/assets internal/gui/tests \
+      --include='*.js' --include='*.html' --include='*.css' --include='*.cjs'
+
+Every hit must be one of the identifiers above or a fixture mirroring a Go
+value; a hit a user reads is a miss.
 
 ## Subsystem design and review
 
