@@ -18,7 +18,7 @@ const piOptions = [
   { value: "openai/gpt-6-astra", note: "GPT-6 Astra", group: "OpenAI" },
   { value: "openai-codex/gpt-6-astra", note: "GPT-6 Astra", group: "OpenAI Codex" },
   { value: "openai-codex/gpt-5.5", note: "GPT-5.5", group: "OpenAI Codex" },
-  { value: "magpie/relay/m1", label: "m1", ref: "relay/m1", note: "Relay · via Echo" },
+  { value: "Echo/relay/m1", label: "m1", ref: "relay/m1", note: "Relay · via Echo" },
 ];
 const state = {
   agents: [

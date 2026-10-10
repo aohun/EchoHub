@@ -12,9 +12,9 @@ const changes = (id) => [
   {
     path: id === "omp" ? "~/.omp/agent/config.yml" : "~/.codex/config.toml",
     lines: [
-      { op: "-", text: "default: magpie/group/auto-model" },
+      { op: "-", text: "default: Echo/group/auto-model" },
       { op: "-", text: "defaultThinkingLevel: xhigh" },
-      ...Array.from({ length: 12 }, (_, i) => ({ op: "-", text: `  model-${i}: magpie/group/auto-model-${i}` })),
+      ...Array.from({ length: 12 }, (_, i) => ({ op: "-", text: `  model-${i}: Echo/group/auto-model-${i}` })),
     ],
   },
   {
@@ -28,7 +28,7 @@ function serve(lang, textSize, posts) {
     agents: ["omp", "codex"].map((id) => ({
       id, name: id === "omp" ? "omp" : "Codex", icon: id === "omp" ? "omp" : "generic", wired: true,
       path: id === "omp" ? "~/.omp/agent/config.yml" : "~/.codex/config.toml",
-      fields: [{ key: "model", label: "model", value: "magpie/relay/m1", options: [{ value: "magpie/relay/m1", label: "Model one", ref: "relay/m1" }] }],
+      fields: [{ key: "model", label: "model", value: "Echo/relay/m1", options: [{ value: "Echo/relay/m1", label: "Model one", ref: "relay/m1" }] }],
     })),
     profiles: [], settings: { lang, theme: "light", textSize },
   };

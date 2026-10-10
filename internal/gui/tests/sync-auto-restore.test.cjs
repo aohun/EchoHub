@@ -42,7 +42,7 @@ function serve(lang, posts) {
       posts.push({ action, body: request.postDataJSON() });
       if (action === "auto") sync = { ...sync, auto: Math.max(0, request.postDataJSON().minutes) };
       if (action === "restore") {
-        sync = { ...sync, undo: true, notice: { at: new Date().toISOString(), here: ["providers", "settings"], saved: "/tmp/magpie/sync", restored: true } };
+        sync = { ...sync, undo: true, notice: { at: new Date().toISOString(), here: ["providers", "settings"], saved: "/tmp/Echo/sync", restored: true } };
         return json({ ...sync, brought: ["providers", "settings"] });
       }
       if (action === "undo") sync = { ...sync, undo: false, notice: undefined };

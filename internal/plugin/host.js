@@ -27,9 +27,11 @@
 
 import { AsyncLocalStorage } from "node:async_hooks"
 import fs from "node:fs"
+import http2 from "node:http2"
 import net from "node:net"
 import path from "node:path"
 import readline from "node:readline"
+import { Duplex } from "node:stream"
 import tls from "node:tls"
 import { pathToFileURL } from "node:url"
 
@@ -265,6 +267,9 @@ let modelsDevPath = ""
 let piPath = "" // pi.js, which loads pi's extensions
 let directory = process.cwd()
 let userConfig = {}
+// prefer is the plugin the user picked for a provider id more than one
+// plugin signs in to: id → its spec (plugins.json's prefer)
+let prefer = {}
 const hooks = [] // {spec, hooks}
 const loaded = [] // {spec, id, error}
 const loaders = new Map() // account → options the auth loader returned
@@ -421,6 +426,96 @@ globalThis.fetch = Object.assign(function fetch(input, init) {
     },
   )
 }, bunFetch)
+
+// An HTTP/2 session a plugin opens itself goes through the proxy its
+// fetches take, as a built-in's requests on Go's transport did. Cursor's
+// plugin runs agent.v1.AgentService/Run on node:http2, which Bun connects
+// directly, *_PROXY or not: where Cursor is reached only through magpie's
+// proxy (the system's, or one set in magpie), its sign-in, models and
+// usage came through and every chat went out without it (#1035).
+const h2connect = http2.connect
+http2.connect = function connect(authority, options, listener) {
+  if (typeof options === "function") [listener, options] = [options, undefined]
+  let u
+  try {
+    u = typeof authority === "string" ? new URL(authority) : authority instanceof URL ? authority : new URL(`${authority.protocol ?? "https:"}//${authority.host ?? authority.hostname}`)
+  } catch {
+    return h2connect.call(this, authority, options, listener)
+  }
+  const p = options?.createConnection ? "" : proxyFor(u.href)
+  if (!p) return h2connect.call(this, authority, options, listener)
+  const host = u.hostname.replace(/^\[|\]$/g, "")
+  const port = Number(u.port || (u.protocol === "http:" ? 80 : 443))
+  const raw = tunnel(p, host, port)
+  const createConnection = () =>
+    u.protocol === "http:" ? raw : tls.connect({ ...options, socket: raw, servername: options?.servername || (net.isIP(host) ? undefined : host), ALPNProtocols: ["h2"] })
+  const session = h2connect.call(this, authority, { ...options, createConnection }, listener)
+  // the tunnel's failure is the session's: Bun's TLS over a stream leaves
+  // the stream's errors unheard (one unheard ends the host), and says a
+  // tunnel that never came as "h2 is not supported"
+  raw.on("error", (e) => session.destroy(e))
+  return session
+}
+
+// tunnel is a connection to host:port through the HTTP proxy p (a SOCKS
+// one is handed to the host as an HTTP bridge to it, netproxy.ForBun): its
+// CONNECT is asked first, and what is written waits for the tunnel. A proxy
+// that turns it away fails it in Go's words ("proxyconnect …").
+function tunnel(p, host, port) {
+  const pu = new URL(p)
+  const ph = pu.hostname.replace(/^\[|\]$/g, "")
+  const pp = Number(pu.port || (pu.protocol === "https:" ? 443 : 80))
+  const target = `${host.includes(":") ? `[${host}]` : host}:${port}`
+  let ready = false
+  const queued = []
+  const sock = pu.protocol === "https:" ? tls.connect({ host: ph, port: pp, servername: net.isIP(ph) ? undefined : ph }) : net.connect({ host: ph, port: pp })
+  const conn = new Duplex({
+    read() {},
+    write(chunk, enc, cb) {
+      if (ready) sock.write(chunk, cb)
+      else queued.push([chunk, cb])
+    },
+    final(cb) {
+      sock.end()
+      cb()
+    },
+    destroy(err, cb) {
+      sock.destroy()
+      cb(err)
+    },
+  })
+  sock.once(pu.protocol === "https:" ? "secureConnect" : "connect", () => {
+    let req = `CONNECT ${target} HTTP/1.1\r\nHost: ${target}\r\n`
+    if (pu.username) {
+      const cred = `${decodeURIComponent(pu.username)}:${decodeURIComponent(pu.password)}`
+      req += `Proxy-Authorization: Basic ${Buffer.from(cred).toString("base64")}\r\n`
+    }
+    sock.write(req + "\r\n")
+  })
+  let got = Buffer.alloc(0)
+  const head = (chunk) => {
+    got = Buffer.concat([got, chunk])
+    const end = got.indexOf("\r\n\r\n")
+    if (end < 0) {
+      if (got.length > 8192) conn.destroy(new Error(`proxyconnect tcp: ${ph}:${pp} answered CONNECT with no HTTP`))
+      return
+    }
+    sock.off("data", head)
+    const status = got.subarray(0, got.indexOf("\r\n")).toString("latin1").replace(/^HTTP\/\d(\.\d)?\s+/, "")
+    if (!/^2\d\d/.test(status)) {
+      const body = got.subarray(end + 4, end + 304).toString("utf8").trim()
+      return conn.destroy(new Error(`proxyconnect tcp: ${body ? `${status}: ${body}` : status}`))
+    }
+    ready = true
+    if (got.length > end + 4) conn.push(got.subarray(end + 4))
+    sock.on("data", (d) => conn.push(d))
+    for (const [c, cb] of queued.splice(0)) sock.write(c, cb)
+  }
+  sock.on("data", head)
+  sock.on("end", () => conn.push(null))
+  sock.on("error", (e) => conn.destroy(ready ? e : new Error(`proxyconnect tcp: dial tcp ${ph}:${pp}: ${e?.message || e?.code || e}`)))
+  return conn
+}
 
 // ---- auth.json ---------------------------------------------------------------
 
@@ -735,7 +830,12 @@ function entries(target) {
     const p = path.join(target, f)
     if (fs.existsSync(p)) out.push(p)
   }
-  if (out.length === 0) throw new Error(`plugin ${target} has no entry (package.json main, exports or index file)`)
+  if (out.length === 0) {
+    // a command alone (bin), an MCP server, is no plugin at all (#1327)
+    const cmd = pkg?.bin ? ", only a command (bin). If it is an MCP server, add it under Library → MCP servers instead" : ""
+    // said without a stack: there is no fault in the host to trace
+    throw Object.assign(new Error(`${pkg?.name || target} isn't an OpenCode or magpie plugin: its package names no file to load (no main or exports in package.json, no index file)${cmd}`), { plain: true })
+  }
   return [...new Set(out)]
 }
 
@@ -798,7 +898,7 @@ async function loadPlugins(list) {
       for (const fn of fns) hooks.push({ spec: p.spec, target: p.target, hooks: (await fn(input, p.options)) ?? {} })
       loaded.push({ spec: p.spec })
     } catch (e) {
-      loaded.push({ spec: p.spec, error: String(e?.stack ?? e) })
+      loaded.push({ spec: p.spec, error: e?.plain ? e.message : String(e?.stack ?? e) })
     }
   }
   config = { provider: {}, ...structuredClone(userConfig) }
@@ -813,11 +913,32 @@ async function loadPlugins(list) {
 }
 
 // auths are the auth hooks by provider, the last plugin to name one
-// winning, as in OpenCode.
+// winning, as in OpenCode, unless the user picked one of them for it
+// (prefer): a plugin of their own beside a third party's that signs in to
+// the same provider id is then theirs to choose, not the list's order.
 function auths() {
   const m = new Map()
   for (const h of hooks) if (h.hooks.auth?.provider) m.set(h.hooks.auth.provider, { spec: h.spec, target: h.target, auth: h.hooks.auth })
+  for (const h of hooks) {
+    const id = h.hooks.auth?.provider
+    if (id && prefer[id] === h.spec) m.set(id, { spec: h.spec, target: h.target, auth: h.hooks.auth })
+  }
   return m
+}
+
+// signsIn are the provider ids the plugin spec's auth hooks name.
+const signsIn = (spec) => [...new Set(hooks.filter((h) => h.spec === spec && h.hooks.auth?.provider).map((h) => h.hooks.auth.provider))]
+
+// withProviders is a loaded plugin as init tells magpie of it: the provider
+// ids it signs in to, and for each one another plugin serves (two plugins
+// naming one id: the host runs one), the plugin that does. magpie says so
+// on the plugin's row rather than leave its provider missing.
+function withProviders(l) {
+  const ids = l.error ? [] : signsIn(l.spec)
+  if (!ids.length) return l
+  const a = auths()
+  const servedBy = Object.fromEntries(ids.filter((id) => a.get(id) && a.get(id).spec !== l.spec).map((id) => [id, a.get(id).spec]))
+  return { ...l, provides: ids, ...(Object.keys(servedBy).length ? { servedBy } : {}) }
 }
 
 function authOf(provider) {
@@ -918,9 +1039,13 @@ async function info(id, key, strict) {
       variants: m.variants ?? was?.variants ?? {},
     }
   }
+  const server = auths().get(id)?.spec
   for (const h of hooks) {
     const ph = h.hooks.provider
     if (ph?.id !== id || typeof ph.models !== "function") continue
+    // a plugin that signs in to id too but doesn't serve it: its list
+    // would be asked with the serving plugin's account
+    if (server && h.spec !== server && signsIn(h.spec).includes(id)) continue
     const k = key ?? accountsOf(readAuth(), id)[0] ?? id
     await fresh(id, k)
     const all = readAuth()
@@ -1039,6 +1164,7 @@ async function providers({ proxies } = {}) {
       methods: methods(a.auth),
       icon: iconOf(a),
       usage: typeof a.auth.usage === "function",
+      checkin: typeof a.auth.checkin === "function",
       maxConcurrency: concurrencyOf(a),
       signedIn: keys.length > 0,
       authType: first?.type ?? "",
@@ -1076,6 +1202,8 @@ async function providers({ proxies } = {}) {
           // and before a discount running now (Qoder's price_factor)
           rate: rateOf(m.rate),
           rateWas: rateOf(m.rateWas),
+          // run fast when the request's service_tier is priority (Cursor's)
+          fast: m.fast === true,
         })),
     })
   }
@@ -1388,6 +1516,43 @@ async function usageOf(provider, account) {
   }
 }
 
+// ---- check-in ----------------------------------------------------------------
+
+// checkin presses the vendor's daily check-in (签到) for the account at key,
+// as the plugin's auth.checkin does it (magpie's own hook, which OpenCode
+// ignores; Lemon on Discord: 签到 belongs in the plugins):
+//   auth.checkin(getAuth, provider) → {
+//     outcome: "claimed" (checked in now) | "done" (in already today) |
+//       "ineligible" (the account can't take part) | "inactive" (no
+//       check-in running) | "captcha" (the vendor asks for a captcha: the
+//       user checks in in its own app; never solved) | "failed",
+//     credit? (what it gave), streak? (days in a row), message?
+//   }
+// magpie asks once a Beijing day per account while the user has it on, and
+// again later that day after a failure; a hook that throws is a failure.
+// Run in the account's scope, a token it renews is saved to that account.
+async function checkin({ provider, account, proxy }) {
+  return via.run(proxy ?? "", () => checkinOf(provider, account))
+}
+
+const checkinOutcomes = ["claimed", "done", "ineligible", "inactive", "captcha", "failed"]
+
+async function checkinOf(provider, account) {
+  const a = auths().get(provider)?.auth
+  if (typeof a?.checkin !== "function") throw new Error(`${provider}'s plugin doesn't check in`)
+  const key = accountKey(provider, account)
+  if (!readAuth()[key]) throw new Error("not signed in")
+  await fresh(provider, key)
+  const p = await info(provider, key)
+  const r = (await inScope(provider, key, () => a.checkin(async () => readAuth()[key], JSON.parse(JSON.stringify(p))))) ?? {}
+  const num = (v) => (typeof v === "number" && isFinite(v) ? Math.max(0, v) : 0)
+  const message = typeof r.message === "string" ? r.message : ""
+  if (!checkinOutcomes.includes(r.outcome)) {
+    return { outcome: "failed", credit: 0, streak: 0, message: message || `the plugin answered no outcome (${JSON.stringify(r.outcome ?? null)})` }
+  }
+  return { outcome: r.outcome, credit: num(r.credit), streak: Math.round(num(r.streak)), message }
+}
+
 // sdkHeaders are what the AI SDK package the model is on sends of the key.
 function sdkHeaders(npm, key) {
   if (!key) return {}
@@ -1516,8 +1681,9 @@ const handlers = {
     piPath = p.piPath ?? ""
     directory = p.directory ?? directory
     userConfig = p.config ?? {}
+    prefer = p.prefer ?? {}
     await loadPlugins(p.plugins ?? [])
-    return { plugins: loaded }
+    return { plugins: loaded.map(withProviders) }
   },
   providers: (p) => providers(p ?? {}),
   prompt: async (p) => ({ prompt: await nextPrompt(p.provider, p.method, p.inputs ?? {}) }),
@@ -1527,6 +1693,7 @@ const handlers = {
   apiKey,
   load,
   usage,
+  checkin,
   // check tries one account as a request would: its loader, then its
   // models as the plugin lists them for it, then its usage, which asks the
   // vendor of the account itself. refused is the models hook saying the

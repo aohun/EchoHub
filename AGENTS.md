@@ -24,6 +24,13 @@ keys and values in `i18n.js`, `index.html`, and the browser tests' UI-text
 assertions in `internal/gui/tests/*.test.cjs` (a test asserts what the
 interface now says).
 
+The rename stops at the frontend: only what the user reads in the GUI
+(assets and browser tests) says Echo. The backend — Go, the gateway, the
+CLI, agents' configs, API headers and paths — is never touched; none of it
+is on screen, so none of it is renamed. A backend identifier that leaks
+into a visible string (a provider id, a header name, a command) stays
+magpie even there.
+
 Left as magpie — renaming them breaks the app or fights every later merge:
 
 - the Go module path `github.com/yetone/magpie` and every import of it;

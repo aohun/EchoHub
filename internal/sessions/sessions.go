@@ -121,8 +121,18 @@ type Session struct {
 // so a swapped one prices against the same copy as the default does.
 var PriceOf = priceOf
 
-// Limit is how many sessions, the latest by last activity, List reads.
+// Limit is how many sessions, the latest by last activity, List reads when
+// the caller asks for no particular number. traceRecentFiles sizes the
+// window gateway attribution is judged over by it too, so it is not raised
+// to make a listing longer: a caller that wants more asks for more.
 const Limit = 200
+
+// All is what a listing that means every session asks List for: the count a
+// page or a command shows beside the list is taken from every session, so
+// the list has to be as long as the count, and this is long past any history
+// a computer has. Limit stays what it is because traceRecentFiles sizes
+// gateway attribution by it.
+const All = 5000
 
 // state is what one file's parse has come to, enough to read on from Off.
 type state struct {
@@ -374,7 +384,9 @@ func stat(f *file) bool {
 
 // ccFiles are the session files of an agent that keeps them as Claude Code
 // does, under its folder's projects/: a session's own <id>.jsonl in its
-// project's folder, and its subagents' in <id>/subagents/.
+// project's folder, its subagents' in <id>/subagents/, and the agents of
+// its workflows (ultracode) in <id>/subagents/workflows/<run>/agent-*.jsonl
+// — beside each run's journal.jsonl, which isn't a transcript.
 func ccFiles(agent, dir string) []file {
 	projects := filepath.Join(dir, "projects")
 	var out []file
@@ -391,13 +403,29 @@ func ccFiles(agent, dir string) []file {
 					out = append(out, f)
 				}
 			} else if e.IsDir() || e.Type()&os.ModeSymlink != 0 {
-				for _, sub := range readDirectory(filepath.Join(path, "subagents")) {
+				subs := filepath.Join(path, "subagents")
+				for _, sub := range readDirectory(subs) {
 					if sub.IsDir() || !strings.HasSuffix(sub.Name(), ".jsonl") {
 						continue
 					}
-					f := file{agent: agent, key: agent + ":" + e.Name(), path: filepath.Join(path, "subagents", sub.Name())}
+					f := file{agent: agent, key: agent + ":" + e.Name(), path: filepath.Join(subs, sub.Name())}
 					if stat(&f) {
 						out = append(out, f)
+					}
+				}
+				for _, run := range readDirectory(filepath.Join(subs, "workflows")) {
+					if !run.IsDir() {
+						continue
+					}
+					dir := filepath.Join(subs, "workflows", run.Name())
+					for _, sub := range readDirectory(dir) {
+						if sub.IsDir() || !strings.HasPrefix(sub.Name(), "agent-") || !strings.HasSuffix(sub.Name(), ".jsonl") {
+							continue
+						}
+						f := file{agent: agent, key: agent + ":" + e.Name(), path: filepath.Join(dir, sub.Name())}
+						if stat(&f) {
+							out = append(out, f)
+						}
 					}
 				}
 			}
@@ -871,9 +899,9 @@ func List(limit int) []Session {
 		}
 		return keys[i] < keys[j]
 	})
-	if len(keys) > limit {
-		keys = keys[:limit]
-	}
+	// the keys are not truncated yet: assemble below drops an empty
+	// session, and a nonempty one must take its place rather than the
+	// page going short - an empty file is not a session (#1320)
 	// every changed file, not just the latest sessions': the first read
 	// indexes them all in one run the page can show, and the stats read
 	// after it has nothing left to do
@@ -884,6 +912,9 @@ func List(limit int) []Session {
 	for _, k := range keys {
 		if s, ok := assemble(groups[k], price); ok {
 			out = append(out, s)
+			if len(out) == limit {
+				break
+			}
 		}
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Last.After(out[j].Last) })
@@ -1347,6 +1378,46 @@ func Find(agent, id string) (Session, bool) {
 		return s, true
 	}
 	return Session{}, false
+}
+
+// Titles is the title of each session named by key (agent:id, as Get takes
+// it) that has its files on this computer: the name it was given, else the
+// agent's own title, else its first prompt. A key with no files, or a
+// session with no title, is left out. The Routing page names its sessions
+// with it (#1293).
+func Titles(keys []string) map[string]string {
+	out := map[string]string{}
+	if len(keys) == 0 {
+		return out
+	}
+	want := make(map[string]bool, len(keys))
+	for _, k := range keys {
+		want[k] = true
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	loadCache()
+	defer closeDBs()
+	files := allFiles()
+	groups := map[string][]file{}
+	var fs []file
+	for _, f := range files {
+		if want[f.key] {
+			groups[f.key] = append(groups[f.key], f)
+			fs = append(fs, f)
+		}
+	}
+	if len(fs) == 0 {
+		return out
+	}
+	refresh(fs, files)
+	price := pricer()
+	for k, g := range groups {
+		if s, ok := assemble(g, price); ok && s.Title != "" {
+			out[k] = s.Title
+		}
+	}
+	return out
 }
 
 // Get is the session whose files are grouped under key (a Summary's Key),

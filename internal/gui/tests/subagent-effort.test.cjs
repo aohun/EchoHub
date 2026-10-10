@@ -28,7 +28,7 @@ const fresh = () => ({
   },
   // Claude Code's subagents (#468): a model of Echo's, offered once it runs
   // through Echo; before, there is nothing to pick and no square
-  ...[["cc-own", "opus", []], ["cc-Echo", "magpie/deepseek/pro", [{ value: "magpie/deepseek/flash", label: "DeepSeek Flash", ref: "deepseek/flash" }]]].map(([id, model, options]) => ({
+  ...[["cc-own", "opus", []], ["cc-Echo", "Echo/deepseek/pro", [{ value: "Echo/deepseek/flash", label: "DeepSeek Flash", ref: "deepseek/flash" }]]].map(([id, model, options]) => ({
     id, name: "Claude Code", path: "/test/settings.json", icon: "claudecode-color", wired: options.length > 0,
     fields: [{ key: "model", label: "model", value: model, options: [{ value: model }] }, { key: "subagent", label: "subagents", value: "", options }],
   }))],

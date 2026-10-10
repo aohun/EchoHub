@@ -89,7 +89,7 @@ function serve(lang, posts, use = usage, alone = false) {
 }
 
 const words = {
-  en: { direct: "At its cap · Codex still uses it", directWhy: /refused with a usage-cap error until it renews.*\nCodex is signed in to this account and asks its vendor itself, not through magpie/s, opus: "Opus week at its cap · back in 3h", opusWhy: /^Opus week is at 90%, past this account's 70% cap, so Echo sends the requests it counts to the other accounts until it renews; other models still use this account/, none: "No cap", cap: (n) => `Cap ${n}%`, held: "At its cap · back in 3h", other: "Other…", menu: "Usage cap" },
+  en: { direct: "At its cap · Codex still uses it", directWhy: /refused with a usage-cap error until it renews.*\nCodex is signed in to this account and asks its vendor itself, not through Echo/s, opus: "Opus week at its cap · back in 3h", opusWhy: /^Opus week is at 90%, past this account's 70% cap, so Echo sends the requests it counts to the other accounts until it renews; other models still use this account/, none: "No cap", cap: (n) => `Cap ${n}%`, held: "At its cap · back in 3h", other: "Other…", menu: "Usage cap" },
   zh: { direct: "已达上限 · Codex 仍在使用", directWhy: /经 Echo 的请求会返回.*\nCodex 登录此账号并直接向厂商发请求/s, opus: "Opus week已达上限 · 3 小时后恢复", opusWhy: /^Opus week已用 90%，超过该账号的 70% 上限.*其他模型仍用此账号/, none: "不设上限", cap: (n) => `上限 ${n}%`, held: "已达上限 · 3 小时后恢复", other: "其他…", menu: "用量上限" },
 };
 
@@ -188,9 +188,9 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
         "A share of your own, 1–99%", "A cap is a share from 1% to 99%", "At its cap", "At its cap · back {in}",
         "A usage window is at {n}%, past this account's {cap}% cap, so Echo counts it as used up and sends requests to the other accounts until that window renews",
         "With no other account on, requests are refused with a usage-cap error until then",
-        "Used to {n}% of each usage window at most; past it, Echo counts this account as used up until the window renews. Click to change",
+        "Stops at {n}% of each usage window: once Echo reads a window at {n}% or past it, it counts this account as used up and sends it nothing more until the window renews. A turn already under way can still take it past {n}%, so the cap doesn't promise the rest is left. Click to change",
         "Used to 100% of its usage windows. Click to cap it at a share of each, so Echo goes on to the other accounts past it",
-        "{who} is used to {n}% of each window at most", "{who} has no usage cap",
+        "{who} stops at {n}% of each window", "{who} has no usage cap",
         "held at its {cap}% usage cap",
         "{who} is left out: a usage window is at {n}, past the {cap}% cap set on the account, so it counts as used up until that window renews.",
       ].filter((k) => !I18N.zh[k]));

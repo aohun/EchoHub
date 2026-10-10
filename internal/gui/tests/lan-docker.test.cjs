@@ -25,7 +25,7 @@ function settingsPayload(over) {
     version: "0.1.400", dir: "/config/Echo", gateway: "http://0.0.0.0:3425",
     proxyNow: "none", proxySource: "none", login: false,
     visionModels: [], imageGenModels: [], workbuddyCheckins: [],
-    lan: true, lanKey: "sk-magpie-0123456789abcdef", lanURLs: ["http://172.17.0.2:3425"],
+    lan: true, lanKey: "sk-Echo-0123456789abcdef", lanURLs: ["http://172.17.0.2:3425"],
     fx: { rate: 7.2, at: new Date().toISOString(), stale: false },
     ...over,
   };

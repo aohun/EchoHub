@@ -14,10 +14,10 @@ const { chromium, webkit } = require("playwright");
 
 const assets = path.resolve(__dirname, "../assets");
 const LAUNCH = "CURSOR_LOCAL_AGENT_BASE_URL=http://127.0.0.1:3425/v1 CURSOR_LOCAL_AGENT_API_KEY=Echo-cursor-local '/Applications/Cursor.app/Contents/MacOS/Cursor'";
-const models = [{ value: "magpie/deepseek/pro", label: "magpie/deepseek/pro", ref: "deepseek/pro" }];
+const models = [{ value: "Echo/deepseek/pro", label: "Echo/deepseek/pro", ref: "deepseek/pro" }];
 const agent = (id, name) => ({
   id, name, path: "/test/" + id, wired: true,
-  fields: [{ key: "model", label: "model", value: "magpie/deepseek/pro", options: models }],
+  fields: [{ key: "model", label: "model", value: "Echo/deepseek/pro", options: models }],
 });
 const NOTICE = "Cursor Private Inference reads Echo's gateway from CURSOR_LOCAL_AGENT_BASE_URL and CURSOR_LOCAL_AGENT_API_KEY, now set for your user: quit it and open it again.";
 const cursorLocal = (on) => ({

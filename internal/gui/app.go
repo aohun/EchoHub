@@ -79,6 +79,7 @@ type host struct {
 	hyprRoom    int          // how tall it may grow under Hyprland's bar; 0 elsewhere
 	clicks      sync.Once    // Hyprland's clicks heard, to close the panel on one outside it
 	glides      atomic.Int64 // the newest panel glide; older ones stop
+	barTray     atomic.Int64 // the newest setTrayInBar; older ones stop
 	query       string       // what the windows' URLs carry (a forced theme)
 
 	// closing is set while a full-screen main window, closed, leaves full
@@ -360,15 +361,18 @@ func Run(version string, showMain bool, link string) error {
 
 	onDock = func(s settings.Settings) { h.dock(s, h.MainShown()) }
 	dockOnFullscreen()
-	// The Dock icon opens the window. Wails would show every hidden window
-	// on it, the panel too, so the hook answers first and stops it.
+	watchHide()
+	// The Dock icon opens the window, or goes to it where it is open. Wails
+	// would show every hidden window on it, the panel too, so the hook
+	// answers first and stops it.
 	h.app.Event.RegisterApplicationEventHook(events.Mac.ApplicationShouldHandleReopen, func(e *application.ApplicationEvent) {
-		h.ShowMain("")
+		application.InvokeSync(h.reopenMain)
 		e.Cancel()
 	})
 
 	h.panel = h.makePanel()
 	h.main = h.makeMain("/?" + theme)
+	onFonts = h.fontsChanged
 
 	// the menu in the page's language, relabelled when that changes (#301)
 	labels := trayMenuLabels(trayLang(settings.Load().Lang, systemLang), version, "")
@@ -448,6 +452,10 @@ func Run(version string, showMain bool, link string) error {
 	h.tray.SetMenu(menu)
 	h.tray.AttachWindow(h.panel).WindowOffset(6)
 	h.watchTrayUsage()
+	// Omarchy's bar shows magpie once: as its widget (Settings → Bar
+	// icon) or as the tray's item, not both
+	onBarIcon = h.setTrayInBar
+	h.setTrayInBar(barIcon(h)["on"])
 	go h.lighten()
 	h.watchAlerts()
 	// the quick panel by the icon, or the main window if the user would
@@ -476,6 +484,7 @@ func Run(version string, showMain bool, link string) error {
 		h.app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
 			plainTitlebar(h.main) // Linux: the page's header is the title bar
 			nameWindow(h.panel, panelTitle)
+			ownFrame(h.panel) // KDE: no title bar of KWin's on it (#1283)
 			markReady()
 		})
 	}
@@ -506,6 +515,9 @@ func Run(version string, showMain bool, link string) error {
 			h.Import(u)
 		}
 	})
+	// GTK 3 with no font DPI set would lay every page out at a negative
+	// width (#1371); give it one before the first webview is made.
+	fontDPI()
 	return h.app.Run()
 }
 
@@ -618,6 +630,23 @@ var OpenView string
 // and SIGTERM itself (it starts listening as it runs, before the app is
 // said to have started); until then a signal is magpie's to handle.
 var Started func()
+
+// setTrayInBar has the tray's item leave the bar's tray while magpie's icon
+// is in Omarchy's bar as its widget, and come back once it isn't. The item
+// is there to be set a moment after the app has started; the newest call
+// wins.
+func (h *host) setTrayInBar(inBar bool) {
+	gen := h.barTray.Add(1)
+	go func() {
+		<-h.ready
+		for range 120 {
+			if h.barTray.Load() != gen || setTrayPassive(h.tray, inBar) {
+				return
+			}
+			time.Sleep(500 * time.Millisecond)
+		}
+	}()
+}
 
 // togglePanel opens the quick panel by the tray icon, or closes it.
 func (h *host) togglePanel() { application.InvokeSync(h.togglePanelNow) }

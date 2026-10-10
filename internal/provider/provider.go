@@ -34,7 +34,7 @@ const (
 	Chat      Protocol = "chat"      // OpenAI Chat Completions
 	Responses Protocol = "responses" // OpenAI Responses
 	Anthropic Protocol = "anthropic" // Anthropic Messages
-	Gemini    Protocol = "gemini"    // Google Gemini. Served to clients; spoken upstream only for Factory's generate route
+	Gemini    Protocol = "gemini"    // Google Gemini's generateContent: served to clients; spoken upstream at a custom provider's Gemini URL and Factory's generate route
 )
 
 // Protocols in the order magpie prefers them when it has to translate.
@@ -50,6 +50,14 @@ type Provider struct {
 	Icon   string   `json:"icon,omitempty"`
 	Preset string   `json:"preset,omitempty"` // preset this was created from, if any
 	Key    string   `json:"key"`              // API key, as typed by the user
+
+	// AccessKeyID and SecretAccessKey are a Volcengine account's access
+	// key (TakesVolcAccessKey), what Ark tells its Coding or Agent Plan's
+	// windows to (volcengine_usage.go); not the plan's inference key in
+	// Key. They are kept, backed up and synced as the keys are: the Secret
+	// is never sent to the GUI, and a backup without keys has neither.
+	AccessKeyID     string `json:"accessKeyID,omitempty"`
+	SecretAccessKey string `json:"secretAccessKey,omitempty"`
 
 	// KeyName names the key in use, and Keys are the provider's other
 	// accounts: keys saved to switch to (see keys.go).
@@ -68,10 +76,21 @@ type Provider struct {
 	Chat      string `json:"chat,omitempty"`
 	Responses string `json:"responses,omitempty"`
 	Anthropic string `json:"anthropic,omitempty"`
+	// Gemini is the base of Google's Gemini API, or of one that answers as
+	// it does (…/v1beta): models/{model}:streamGenerateContent is asked
+	// under it, with the key in x-goog-api-key, and models under it lists
+	// them (#1346).
+	Gemini string `json:"gemini,omitempty"`
 	// Decide is the base of a decision API (TypeSafe's System One, which
 	// Jev answers), for routing groups' choices of model and effort. The
 	// provider may also serve conversations on the other endpoints.
 	Decide string `json:"decide,omitempty"`
+	// BaseAPI is the API the user gave a custom provider's Base URL as,
+	// in its editor: "chat", "responses", "anthropic", "gemini" or "decide". The
+	// editor shows that pick again, where it would otherwise show the
+	// first API with a URL (01huadalang: Responses picked and saved came
+	// back as OpenAI compatible). Requests go by which URLs are set.
+	BaseAPI string `json:"baseAPI,omitempty"`
 
 	// Fallback is where a request goes when this provider can't take it —
 	// out of quota, rate limited, overloaded or down — before any of the
@@ -135,6 +154,12 @@ type Provider struct {
 	// it is turned away as having waited too long (#892). 0 waits as long
 	// as it takes.
 	QueueWait int `json:"queueWait,omitempty"`
+	// MaxRPM is how many requests a minute each of its keys or accounts
+	// sends the vendor, over a rolling 60 seconds (coeo91 on Discord:
+	// OpenRouter's free models take 20 a minute, which a limit at once
+	// can't keep to); one more waits for room (see RPMLimit). 0 is no
+	// limit.
+	MaxRPM int `json:"maxRPM,omitempty"`
 
 	// PriceRate is what the provider charges against the official price
 	// (ITea312, #819): a relay that bills 0.8× or 1.5× of it. It scales the
@@ -164,16 +189,25 @@ type Provider struct {
 	// DeepSeek's own keeps its prompt cache. See ClinePin.
 	PinUpstream bool `json:"pinUpstream,omitempty"`
 
+	// Unredacted has requests to a provider on this machine or the local
+	// network (Ollama, LM Studio, a vLLM box) go as the agent wrote them,
+	// unmasked by Settings' redaction, which keeps secrets from vendors
+	// (lc on Discord). It is the user's word, not the address's: a relay
+	// run locally, or Ollama's cloud models, pass a request on to a vendor.
+	// See SkipsRedaction.
+	Unredacted bool `json:"unredacted,omitempty"`
+
 	// Proxy is the proxy magpie's requests to this provider go through
 	// (#237: Codex through one, a vendor at home without): "" follows
 	// the global one (Settings' Proxy, the environment's, the system's),
 	// "direct" none, anything else the proxy's address (http://, https://,
 	// socks5://; host:port means http). Signed-in accounts keep it too.
 	Proxy string `json:"proxy,omitempty"`
-	// AccountProxies is, for a subscription holding several accounts
-	// (Codex's, Claude Code's…), the proxy of each account that has one
-	// of its own, by its name in lower case, as Proxy takes one; an
-	// account not in it follows Proxy (see ProxyChoice).
+	// AccountProxies is, for a provider holding several accounts or keys
+	// (Codex's accounts, a relay's keys…), the proxy of each one that has
+	// one of its own, as Proxy takes one: an account by its name in lower
+	// case, a key by its KeyID. One not in it follows Proxy (see
+	// ProxyChoice).
 	AccountProxies map[string]string `json:"accountProxies,omitempty"`
 	// AccountModels is, for a provider holding several accounts or keys,
 	// the models each one the user narrowed serves, and no others (#474):
@@ -185,6 +219,12 @@ type Provider struct {
 	// in lower case: past it, routing takes the account for used up until
 	// the window renews (see account_caps.go). One not in it has no cap.
 	AccountCaps map[string]int `json:"accountCaps,omitempty"`
+	// AccountWindowCaps is, for a subscription, the share of each usage
+	// window an account is used to at most where the user set one for that
+	// window apart (willz on Discord), by the account's name in lower case
+	// and then the window's WindowCapID: 1–99, or 100 for none on it. A
+	// window not in it takes the account's AccountCaps.
+	AccountWindowCaps map[string]map[string]int `json:"accountWindowCaps,omitempty"`
 
 	// BalanceURL, when set, is where the vendor tells what is left on a
 	// key, asked with the key the way a chat request carries it; BalancePath
@@ -375,6 +415,13 @@ func (p Provider) clone() Provider {
 	p.Headers = maps.Clone(p.Headers)
 	p.AccountProxies = maps.Clone(p.AccountProxies)
 	p.AccountCaps = maps.Clone(p.AccountCaps)
+	if p.AccountWindowCaps != nil {
+		m := make(map[string]map[string]int, len(p.AccountWindowCaps))
+		for k, v := range p.AccountWindowCaps {
+			m[k] = maps.Clone(v)
+		}
+		p.AccountWindowCaps = m
+	}
 	p.AccountConcurrency = maps.Clone(p.AccountConcurrency)
 	p.Contexts = maps.Clone(p.Contexts)
 	if p.AccountModels != nil {
@@ -406,7 +453,7 @@ func allProviders() []Provider {
 	var out []Provider
 	for _, p := range stored {
 		p = normalize(p)
-		if p.Chat == "" && p.Responses == "" && p.Anthropic == "" && p.Decide == "" {
+		if !hasEndpoint(p) {
 			picks[p.ID] = p
 			continue
 		}
@@ -420,9 +467,10 @@ func allProviders() []Provider {
 		a.Models, a.Unlisted, a.Off, a.Fallback, a.Routing, a.Affinity, a.KeepLogin, a.KeepLoginAs, a.Contexts, a.Family = pk.Models, pk.Unlisted, pk.Off, pk.Fallback, pk.Routing, pk.Affinity, pk.KeepLogin, pk.KeepLoginAs, pk.Contexts, pk.Family
 		a.Sink = pk.Sink
 		a.Proxy, a.AccountProxies, a.AccountModels = pk.Proxy, pk.AccountProxies, pk.AccountModels
-		a.AccountCaps = pk.AccountCaps
+		a.AccountCaps, a.AccountWindowCaps = pk.AccountCaps, pk.AccountWindowCaps
 		a.MaxConcurrency, a.PinUpstream = pk.MaxConcurrency, pk.PinUpstream
 		a.AccountConcurrency, a.QueueLimit, a.QueueWait = pk.AccountConcurrency, pk.QueueLimit, pk.QueueWait
+		a.MaxRPM = pk.MaxRPM
 		if a.ID == "cursor" { // picked before its efforts were one model
 			a.Models = cursorPicks(a.Models)
 		}
@@ -508,7 +556,11 @@ func Save(p Provider) error {
 	if p.ID == "" {
 		p.ID = Slug(p.Name)
 	}
-	if p.ID == "" || p.ID != Slug(p.ID) {
+	// an id stored already is the provider's, whatever it is: one put in
+	// providers.json by hand ("b.ai") was refused on every Save, so the
+	// editor could neither change it nor rename it to one that is right
+	// (01huadalang on Discord: 我不管改成什么都显示不能用 b.ai)
+	if p.ID == "" || p.ID != Slug(p.ID) && !stored(p.ID) {
 		return fmt.Errorf("provider id must be lowercase letters, digits and dashes, not %q", p.ID)
 	}
 	if p.ID == "magpie" {
@@ -536,14 +588,14 @@ func Save(p Provider) error {
 		if p.ID == "kiro" {
 			key = p.Key
 		}
-		p = Provider{ID: p.ID, Key: key, Models: p.Models, Unlisted: p.Unlisted, Off: p.Off, Fallback: p.Fallback, Routing: p.Routing, Sink: p.Sink, Affinity: p.Affinity, KeepLogin: p.KeepLogin, KeepLoginAs: p.KeepLoginAs, Contexts: p.Contexts, Family: p.Family, Proxy: p.Proxy, AccountProxies: p.AccountProxies, AccountModels: p.AccountModels, AccountCaps: p.AccountCaps, MaxConcurrency: p.MaxConcurrency, AccountConcurrency: p.AccountConcurrency, QueueLimit: p.QueueLimit, QueueWait: p.QueueWait, PinUpstream: p.PinUpstream, Hidden: hiddenAccount(p.ID), Quiet: quietAccount(p.ID), Tucked: tuckedAccount(p.ID)}
+		p = Provider{ID: p.ID, Key: key, Models: p.Models, Unlisted: p.Unlisted, Off: p.Off, Fallback: p.Fallback, Routing: p.Routing, Sink: p.Sink, Affinity: p.Affinity, KeepLogin: p.KeepLogin, KeepLoginAs: p.KeepLoginAs, Contexts: p.Contexts, Family: p.Family, Proxy: p.Proxy, AccountProxies: p.AccountProxies, AccountModels: p.AccountModels, AccountCaps: p.AccountCaps, AccountWindowCaps: p.AccountWindowCaps, MaxConcurrency: p.MaxConcurrency, AccountConcurrency: p.AccountConcurrency, QueueLimit: p.QueueLimit, QueueWait: p.QueueWait, MaxRPM: p.MaxRPM, PinUpstream: p.PinUpstream, Hidden: hiddenAccount(p.ID), Quiet: quietAccount(p.ID), Tucked: tuckedAccount(p.ID)}
 	} else {
-		p.AccountProxies = nil // a provider of a key has no accounts to proxy apart
+		p.AccountProxies = keyProxies(p) // a provider of keys proxies each key apart
 		if subscriptionID(p.ID) && !stored(p.ID) {
 			// taken, it would hide that subscription once signed in
 			return fmt.Errorf("%q is the id of the %s subscription; pick another name", p.ID, p.ID)
 		}
-		if p.Chat == "" && p.Responses == "" && p.Anthropic == "" && p.Decide == "" {
+		if !hasEndpoint(p) {
 			if p.Preset == AzurePreset {
 				return errors.New("Azure OpenAI needs your resource's endpoint, e.g. https://<resource>.openai.azure.com")
 			}
@@ -601,7 +653,14 @@ func add(p Provider, once bool) (string, error) {
 		}
 	}
 	p.ID, p.Name = freeID(p.ID), freeName(p.Name)
-	return p.ID, Save(p)
+	if err := Save(p); err != nil {
+		return p.ID, err
+	}
+	if p.Preset != "" {
+		// a provider added from a partner counts for it (partner_events.go)
+		CountPartner(PartnerAdded, p.Preset)
+	}
+	return p.ID, nil
 }
 
 // AddCopy adds p, a copy the user made of the provider from (#268), beside
@@ -626,6 +685,9 @@ func AddCopy(p Provider, from string) (string, error) {
 	if p.BalanceToken == "" {
 		p.BalanceToken = src.BalanceToken
 	}
+	if p.AccessKeyID == "" && p.SecretAccessKey == "" {
+		p.AccessKeyID, p.SecretAccessKey = src.AccessKeyID, src.SecretAccessKey
+	}
 	if p.ZhipuTeam == nil {
 		p.ZhipuTeam = src.ZhipuTeam
 	}
@@ -634,6 +696,7 @@ func AddCopy(p Provider, from string) (string, error) {
 	}
 	p.Unlisted = p.Unlisted || src.Unlisted
 	p.Searches = p.Searches || src.Searches
+	p.Unredacted = p.Unredacted || src.Unredacted
 	if p.Website == "" {
 		p.Website = src.Website
 	}
@@ -646,7 +709,7 @@ func AddCopy(p Provider, from string) (string, error) {
 // hostID is an id for a provider from the host it is on: api.relay.com is
 // relay, and one on an IP address, or with no address, is custom.
 func hostID(p Provider) string {
-	for _, u := range []string{p.Chat, p.Responses, p.Anthropic} {
+	for _, u := range []string{p.Chat, p.Responses, p.Anthropic, p.Gemini} {
 		h := hostOf(u)
 		if host, _, err := net.SplitHostPort(h); err == nil {
 			h = host
@@ -829,9 +892,10 @@ func normalize(p Provider) Provider {
 	p.AccountProxies = normalAccountProxies(p.AccountProxies)
 	p.AccountModels = normalAccountModels(p.AccountModels)
 	p.AccountCaps = normalAccountCaps(p.AccountCaps)
+	p.AccountWindowCaps = normalWindowCaps(p.AccountWindowCaps)
 	p.ZhipuTeam = p.ZhipuTeam.normal()
 	p.remoteMagpieEndpoints()
-	for _, u := range []*string{&p.Chat, &p.Responses, &p.Anthropic, &p.Decide, &p.Website, &p.KeysURL} {
+	for _, u := range []*string{&p.Chat, &p.Responses, &p.Anthropic, &p.Gemini, &p.Decide, &p.Website, &p.KeysURL} {
 		*u = strings.TrimRight(strings.TrimSpace(*u), "/")
 		if *u != "" && !strings.Contains(*u, "://") {
 			*u = "https://" + *u
@@ -846,6 +910,11 @@ func normalize(p Provider) Provider {
 			p.Anthropic = b
 			break
 		}
+	}
+	p.Gemini = GeminiBase(p.Gemini)
+	// a pick whose URL is gone (cleared from the CLI) is no pick
+	if p.BaseAPI != "" && p.baseOf(p.BaseAPI) == "" {
+		p.BaseAPI = ""
 	}
 	p.Models = cleanList(p.Models)
 	p.Fallback = cleanList(p.Fallback)
@@ -882,6 +951,7 @@ func normalize(p Provider) Provider {
 	}
 	p.AccountConcurrency = normalAccountConcurrency(p.AccountConcurrency)
 	p.QueueLimit, p.QueueWait = min(max(p.QueueLimit, 0), MaxQueueLimit), min(max(p.QueueWait, 0), MaxQueueWait)
+	p.MaxRPM = min(max(p.MaxRPM, 0), MaxRPMLimit)
 	p.Catalog = strings.Join(p.Catalogs(), ", ")
 	// a Bedrock provider saved before the preset had its Responses API
 	// (#176) gets it where its chat completions are: the runtime serves both
@@ -892,6 +962,8 @@ func normalize(p Provider) Provider {
 	// Azure OpenAI's resource, however its endpoint was pasted, is asked
 	// on its v1 API, chat completions and Responses both (azure.go)
 	p.azureEndpoints()
+	// OpenCode Zen's or Go's other APIs, beside the one it was given (#1215)
+	p.openCodeEndpoints()
 	// a preset's provider keeps its headers too: the preset gives the
 	// endpoints and catalog, the headers say which workspace or app it is
 	p.Headers = cleanHeaders(p.Headers)
@@ -967,6 +1039,24 @@ func contains(xs []string, x string) bool {
 	return false
 }
 
+// baseOf is the URL saved for one of the editor's Base URL APIs (BaseAPI),
+// "" for an API it doesn't know.
+func (p Provider) baseOf(api string) string {
+	switch api {
+	case "chat":
+		return p.Chat
+	case "responses":
+		return p.Responses
+	case "anthropic":
+		return p.Anthropic
+	case "gemini":
+		return p.Gemini
+	case "decide":
+		return p.Decide
+	}
+	return ""
+}
+
 // Base returns the base URL for a protocol, or "" when the vendor lacks it.
 func (p Provider) Base(proto Protocol) string {
 	switch proto {
@@ -982,10 +1072,11 @@ func (p Provider) Base(proto Protocol) string {
 		}
 	case Gemini:
 		// Factory's Gemini models are generateContent at /api/llm/g, not
-		// Code Assist. No other provider speaks Gemini upstream.
-		if p.ID == "factory" && p.Account != nil {
+		// Code Assist
+		if p.FactoryGemini() {
 			return factoryAPI + "/api/llm/g/v1"
 		}
+		return p.Gemini
 	}
 	return ""
 }
@@ -1008,11 +1099,17 @@ func (p Provider) Speaks() []Protocol {
 	}
 	// Factory's Gemini models, on generateContent. A model droid didn't
 	// list stays on the other three (factoryAPIs); this is not one of them.
-	if p.ID == "factory" && p.Account != nil {
+	// A custom provider's Gemini API comes after the others it has.
+	if p.FactoryGemini() || p.Gemini != "" {
 		out = append(out, Gemini)
 	}
 	return out
 }
+
+// FactoryGemini is Factory's sign-in, whose Gemini models are asked on its
+// own generate route (…/generate, the model in the body), not at
+// models/{model}:streamGenerateContent as Google's Gemini API asks them.
+func (p Provider) FactoryGemini() bool { return p.ID == "factory" && p.Account != nil }
 
 // ResponsesFirst: an OpenAI model on OpenAI's API, Copilot's, PipeLLM's or Bedrock's,
 // which is best asked on the Responses API though Chat serves it too.

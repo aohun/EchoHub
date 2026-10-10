@@ -12,14 +12,14 @@ const { test } = require("node:test");
 const { chromium, webkit } = require("playwright");
 
 const assets = path.resolve(__dirname, "../assets");
-const models = [{ value: "magpie/v/glm", label: "GLM", ref: "v/glm" }, { value: "magpie/v/flash", label: "Flash", ref: "v/flash" }];
+const models = [{ value: "Echo/v/glm", label: "GLM", ref: "v/glm" }, { value: "Echo/v/flash", label: "Flash", ref: "v/flash" }];
 const tiers = ["opus", "sonnet", "haiku", "fable"];
 const fresh = () => ({
   agents: [{
     id: "claude-desktop", name: "Claude Desktop", path: "/test/claude_desktop_config.json", icon: "claude-color", wired: true,
     fields: [
       { key: "provider", label: "provider", value: "magpie", options: [{ value: "magpie", label: "magpie" }] },
-      ...tiers.map((tier) => ({ key: tier, label: tier, value: tier === "haiku" ? "magpie/v/flash" : "", options: models })),
+      ...tiers.map((tier) => ({ key: tier, label: tier, value: tier === "haiku" ? "Echo/v/flash" : "", options: models })),
     ],
   }],
   profiles: [],
@@ -91,7 +91,7 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
       assert.deepEqual(first, [w.reset, w.unset]);
       await page.locator("#list li", { hasText: "GLM" }).first().click();
       await page.waitForFunction(() => document.querySelector("#status")?.textContent);
-      assert.deepEqual(sets, [{ agent: "claude-desktop", field: "sonnet", value: "magpie/v/glm" }]);
+      assert.deepEqual(sets, [{ agent: "claude-desktop", field: "sonnet", value: "Echo/v/glm" }]);
       assert.equal(await page.evaluate(() => scrollY), y, "a click scrolled the page");
       assert.deepEqual(errors, []);
     });

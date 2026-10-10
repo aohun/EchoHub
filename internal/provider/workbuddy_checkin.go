@@ -69,6 +69,9 @@ const (
 	CheckinIneligible = "ineligible" // the account can't take part
 	CheckinInactive   = "inactive"   // no event running, or it has ended
 	CheckinFailed     = "failed"     // no answer; tried again later that day
+	// CheckinCaptcha is a plugin's check-in the vendor asked a captcha
+	// of: the user checks in in its own app, magpie never solves one
+	CheckinCaptcha = "captcha"
 )
 
 // wbCheckinSoon is how long a check-in that never reached WorkBuddy waits
@@ -96,6 +99,9 @@ type WorkBuddyCheckin struct {
 	Credit  float64   `json:"credit,omitempty"`
 	Streak  int       `json:"streak,omitempty"`
 	Msg     string    `json:"msg,omitempty"`
+	// ValidUntil is a campaign's end, when a successful answer must be
+	// checked again, even if the Beijing day hasn't changed.
+	ValidUntil time.Time `json:"until,omitzero"`
 	// Offline is a failure that never reached WorkBuddy, and Tries how
 	// many before it the same day did the same.
 	Offline bool `json:"offline,omitempty"`
@@ -103,6 +109,9 @@ type WorkBuddyCheckin struct {
 	// By is the vendor whose check-in it is: "" WorkBuddy's, "trae"
 	// Trae CN's; never kept.
 	By string `json:"by,omitempty"`
+	// Vendor is a plugin's provider by name, for a check-in By
+	// "plugin:<id>"; never kept.
+	Vendor string `json:"vendor,omitempty"`
 	// Asked is true of one checked in on this run, not one read back.
 	Asked bool `json:"-"`
 }
@@ -292,7 +301,8 @@ func WithCheckins(qs []SubscriptionQuota) []SubscriptionQuota {
 	qs = withCheckins(qs, wbCheckinAccounts(), readCheckins(wbCheckinPath()))
 	qs = markCheckins(qs, traeCards(traeCheckinAccounts()), readCheckins(traeCheckinPath()), "trae")
 	qs = markCheckins(qs, miniMaxCards(miniMaxCheckinAccounts()), readCheckins(miniMaxCheckinPath()), "minimax")
-	return markCheckins(qs, qoderCards(qoderCheckinAccounts()), readCheckins(qoderCheckinPath()), "qoder")
+	qs = markCheckins(qs, qoderCards(qoderCheckinAccounts()), readCheckins(qoderCheckinPath()), "qoder")
+	return pluginCheckinMarks(qs)
 }
 
 func withCheckins(qs []SubscriptionQuota, accts []wbAccount, st map[string]WorkBuddyCheckin) []SubscriptionQuota {
@@ -361,13 +371,13 @@ func HasWorkBuddy() bool { return len(wbCheckinAccounts()) > 0 }
 func wbCheckinAccounts() []wbAccount {
 	if Moved(wbCN.id) {
 		pp, ok := PluginOf(wbCN.id)
-		if !ok {
+		if !ok || pluginChecksIn(pp) {
 			return nil
 		}
 		return wbPluginAccounts(pp)
 	}
 	out := wbLogins(wbCN)
-	if pp, ok := PluginOf(PluginID(wbCN.id)); ok && pp.ID == wbCN.id {
+	if pp, ok := PluginOf(PluginID(wbCN.id)); ok && pp.ID == wbCN.id && !pluginChecksIn(pp) {
 		out = append(out, wbPluginAccounts(pp)...)
 	}
 	return out

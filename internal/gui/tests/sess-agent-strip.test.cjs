@@ -49,7 +49,7 @@ function serve(lang, names) {
       const agent = ids.includes(want) ? want : ids[0];
       return json({
         agents: ids.map((id) => ({ agent: id, count: 2, deletable: true, name: agents[id], icon: "generic" })),
-        agent, sessions: sessions.filter((s) => s.agent === agent), terminal: true, trash: [], trashDir: "~/magpie/trash/sessions",
+        agent, sessions: sessions.filter((s) => s.agent === agent), terminal: true, trash: [], trashDir: "~/Echo/trash/sessions",
       });
     }
     if (url.pathname === "/api/groups") return json({ groups: [] });

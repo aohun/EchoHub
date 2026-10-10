@@ -20,6 +20,7 @@ const pluginUsage = `usage: magpie plugin [list] [--json]
        magpie plugin update                        install the newest version of each
        magpie plugin on|off <name>                 turn one on or off
        magpie plugin options <name> [<json> | off] show or set what a plugin is handed (a middleware's ctx.options)
+       magpie plugin use <name> <provider>         have this plugin serve a provider another plugin signs in to as well
        magpie plugin login <provider> [<method>]   sign in to a provider a plugin adds
        magpie plugin logout <provider>             forget the sign-in
        magpie plugin move|migrate <subscription>   run a built-in subscription's accounts on its community plugin
@@ -97,6 +98,16 @@ func pluginCmd(args []string) error {
 			return errors.New(pluginUsage)
 		}
 		return pluginOptions(rest[0], rest[1:])
+	case "use", "prefer":
+		if len(rest) != 2 {
+			return errors.New(pluginUsage)
+		}
+		rest[0] = installedName(rest[0])
+		if err := plugin.Prefer(rest[0], rest[1]); err != nil {
+			return err
+		}
+		fmt.Println(green.Render("✓"), rest[0], "serves", rest[1])
+		return listPlugins(ctx, false)
 	case "login", "signin":
 		if len(rest) < 1 || len(rest) > 2 {
 			return errors.New(pluginUsage)
@@ -168,6 +179,7 @@ func listPlugins(ctx context.Context, asJSON bool) error {
 	for _, p := range loaded {
 		errs[p.Spec] = p.Error
 	}
+	clashes := plugin.Clashes(loaded)
 	ps, perr := plugin.Providers(ctx)
 	mws := middleware.States()
 	if asJSON {
@@ -219,6 +231,18 @@ func listPlugins(ctx context.Context, asJSON bool) error {
 			}
 			fmt.Printf("  %s %s  %s\n", provider.PluginID(p.ID), muted.Render("("+p.Name+", "+strconv.Itoa(len(p.Models))+" models)"), who)
 		}
+		// a provider another plugin signs in to as well: one of them runs
+		// it, and the other's is said, not left out
+		for _, c := range clashes[e.Spec] {
+			if e.Off || errs[e.Spec] != "" {
+				continue
+			}
+			if c.By == e.Spec {
+				fmt.Printf("  %s  %s\n", provider.PluginID(c.ID), muted.Render("also signed in to by "+strings.Join(c.With, ", ")+"; this one serves it"))
+				continue
+			}
+			fmt.Printf("  %s  %s\n", provider.PluginID(c.ID), amber.Render("served by "+c.By+", which signs in to it too · magpie plugin use "+e.Spec+" "+c.ID))
+		}
 	}
 	if lerr != nil {
 		return lerr
@@ -251,10 +275,15 @@ func installedName(name string) string {
 func pluginOptions(name string, set []string) error {
 	var e *plugin.Entry
 	ps := plugin.Load().Plugins
+	// the one added as name exactly, else the one of that package
 	for i, x := range ps {
-		if plugin.Name(x.Spec) == name || x.Spec == name {
+		if e == nil && x.Spec == name {
 			e = &ps[i]
-			break
+		}
+	}
+	for i, x := range ps {
+		if e == nil && plugin.Name(x.Spec) == name {
+			e = &ps[i]
 		}
 	}
 	// a short name, as the community's READMEs write it
@@ -414,11 +443,35 @@ func pluginLogin(ctx context.Context, name, method string) error {
 		}
 		wait, cancel := context.WithTimeout(ctx, 10*time.Minute)
 		defer cancel()
+		if a.Method != "code" && provider.PluginPastesCallback(pp.ID, a.URL) {
+			// a browser on another computer (magpie on a server or in
+			// Docker) ends on a page that won't load: its address finishes it
+			fmt.Println("If the page the browser ends on won't load (magpie on a server or in Docker), paste its whole address here and press Enter:")
+			go func() {
+				for wait.Err() == nil {
+					line, err := stdin.ReadString('\n')
+					if strings.TrimSpace(line) != "" && wait.Err() == nil {
+						if next, err := provider.PastePluginCallback(wait, a.URL, line); err != nil {
+							fmt.Println(err)
+						} else if next != "" {
+							fmt.Println("Go on signing in at:")
+							fmt.Println(faint.Render(next))
+						}
+					}
+					if err != nil {
+						return
+					}
+				}
+			}()
+		}
 		if saved, err = plugin.Finish(wait, a.Session, code); err != nil {
 			return err
 		}
 	}
-	fmt.Println(green.Render("✓"), "signed in to", pp.Name, muted.Render("· its models are "+provider.PluginID(saved.Provider)+"/<model>"))
+	// as the window's sign-in does: its lapsed mark goes and, removed from
+	// magpie, it comes back
+	id := provider.PluginSignedIn(saved)
+	fmt.Println(green.Render("✓"), "signed in to", pp.Name, muted.Render("· its models are "+id+"/<model>"))
 	return nil
 }
 

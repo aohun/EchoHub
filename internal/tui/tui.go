@@ -97,6 +97,10 @@ type model struct {
 	w, h    int
 	syncing bool
 
+	// failover: what an agent going through magpie for account failover
+	// alone, not connected, says of it (agent.FailoverSaid, #1385)
+	failover []string
+
 	page      page
 	back      mode // where esc goes from a picker or a line to type
 	ask       ask
@@ -184,8 +188,10 @@ func newModel() model {
 
 func (m *model) reload() {
 	m.values = make([]map[string]string, len(m.agents))
+	m.failover = make([]string, len(m.agents))
 	for i, a := range m.agents {
 		m.values[i] = a.Values()
+		m.failover[i] = a.FailoverSaid()
 	}
 	switch m.page {
 	case pageProviders:
@@ -199,7 +205,7 @@ func (m *model) reload() {
 			m.gsel = clamp(m.gsel, len(g.Members)+len(g.Rules))
 		}
 	case pageUsage:
-		m.sum, m.direct = usage.Summarize(m.period), usage.Direct(m.period)
+		m.sum, m.direct = usage.Summaries(m.period)
 	case pageSessions:
 		m.reloadSessions()
 	case pageLibrary:
@@ -811,6 +817,9 @@ func (m model) viewList() string {
 				line += sMuted.Render(" " + f.Label)
 			}
 			line += cell + " "
+		}
+		if i < len(m.failover) && m.failover[i] != "" {
+			line += sMuted.Render(" · " + m.failover[i])
 		}
 		if sel {
 			p := tilde(a.Path)

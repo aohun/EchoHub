@@ -24,6 +24,8 @@ func appendAndQueryAllocs(t *testing.T, n int) float64 {
 }
 
 func TestRequestPageAppendDoesNotRepriceHistory(t *testing.T) {
+	settleLogClock(t)
+	holdClock(t, time.Date(2026, 9, 30, 12, 0, 0, 0, time.Local))
 	// A query costs a fixed number of allocations that depends on the
 	// machine (on Windows, provider sign-in lookups read the environment and
 	// registry), so the budget is what 7990 more records of history add:
@@ -95,6 +97,7 @@ func TestRequestPageInvalidatesLivePrice(t *testing.T) {
 }
 
 func BenchmarkRequestPageAfterAppend(b *testing.B) {
+	settleLogClock(b)
 	testenv.SetHome(b, b.TempDir())
 	b.Setenv("XDG_CONFIG_HOME", b.TempDir())
 	b.Setenv("XDG_CACHE_HOME", b.TempDir())

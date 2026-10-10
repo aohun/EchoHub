@@ -40,6 +40,10 @@ type Option struct {
 	// Context is the tokens the model takes, when known; the picker marks
 	// the large ones
 	Context int `json:"context,omitempty"`
+	// Takes, on an effort field's default (Value ""), is the level the
+	// agent takes for the model with none set (Codex: the catalog entry's
+	// default_reasoning_level), shown beside "default"
+	Takes string `json:"takes,omitempty"`
 	// Direct names who the agent asks for this model itself, on its own
 	// sign-in or key, with magpie not in the way ("Anthropic"): its config
 	// then names no magpie endpoint, which is right, not a failed setup
@@ -83,7 +87,8 @@ type Field struct {
 	// another field until set (Claude Code's per-tier models).
 	Quiet bool
 	// Follows is the key of the field a Quiet one takes after while empty
-	// ("model" for Claude Code's tiers), for a profile's details to say so.
+	// ("model" for Claude Code's tiers and subagents): a profile's details
+	// say so, and Drift reads the field as on that one's model (#1050).
 	Follows string
 }
 
@@ -143,6 +148,12 @@ type Agent struct {
 	// provider), so a model's name the gateway takes as a routing group
 	// is that group's (#750).
 	Routed func() bool
+	// FailingOver reports an agent that isn't connected whose requests
+	// still go through magpie's gateway, for account failover alone (Codex
+	// signed in to ChatGPT with more of its accounts on in magpie, #1385):
+	// the Agents page says so and what turns it off, and the gateway lists
+	// it only its own models.
+	FailingOver func() bool
 	// Follow, for an agent whose own picker moves its main model where
 	// magpie keeps other settings following it (Claude Code's /model and
 	// its tiers), brings those along to the model picked there. Run as the
@@ -208,6 +219,17 @@ type Agent struct {
 	// detect, when set, says whether the agent is here in place of looking
 	// for its files and binary: a distro's, probed once.
 	detect func() bool
+	// reach, when set, is the gateway's address as the agent's config has
+	// it where that is kept apart from Gateway (this machine's Codex at an
+	// address of the user's, #816): Drift tries it (see reach.go).
+	reach func() string
+	// move, when set, points the agent's config at to where it names the
+	// gateway at from: an address of WSL's that changed (#1013).
+	move func(from, to string) error
+	// dirShared says Dir is a folder another agent keeps its files in too
+	// (omp's, when PI_CODING_AGENT_DIR points it at Pi's): that it is there
+	// says nothing of this agent.
+	dirShared bool
 }
 
 // Running reports whether a process whose command line matches any pattern
@@ -243,11 +265,30 @@ func (a *Agent) Detected() bool {
 	if _, err := os.Stat(a.Path); err == nil {
 		return true
 	}
-	if a.Dir != "" && isDir(a.Dir) {
+	if a.Dir != "" && !a.dirShared && agentDir(a.Dir) {
 		return true
 	}
 	if a.Bin != "" {
 		if _, err := exec.LookPath(a.Bin); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+// agentDir reports whether p is a folder an agent itself made. Skill
+// installers (npx skills and the like) make <folder>/skills for every agent
+// they know, installed or not; a folder holding nothing else is theirs.
+func agentDir(p string) bool {
+	es, err := os.ReadDir(p)
+	if err != nil {
+		return isDir(p)
+	}
+	if len(es) == 0 {
+		return true
+	}
+	for _, e := range es {
+		if n := e.Name(); n != "skills" && n != ".DS_Store" {
 			return true
 		}
 	}

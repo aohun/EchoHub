@@ -17,7 +17,7 @@ const assets = path.resolve(__dirname, "../assets");
 const claude = [
   { value: "claude-sonnet-5-5", note: "Claude Sonnet 5.5", icon: "claude-color", group: "Claude Code", direct: "Anthropic" },
   { value: "claude-opus-5-5", note: "Claude Opus 5.5", icon: "claude-color", group: "Claude Code", direct: "Anthropic" },
-  { value: "magpie/deepseek/pro", label: "DeepSeek Pro", note: "DeepSeek · via Echo", icon: "deepseek-color", group: "DeepSeek", ref: "deepseek/pro" },
+  { value: "Echo/deepseek/pro", label: "DeepSeek Pro", note: "DeepSeek · via Echo", icon: "deepseek-color", group: "DeepSeek", ref: "deepseek/pro" },
 ];
 const codex = [
   { value: "relay/m1", label: "m1", note: "someone.with.a.long.address@example.com · via Echo", ref: "relay/m1", group: "Relay" },
@@ -101,7 +101,7 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
       // picking Echo's from it connects it, as the row's list did
       await ds.click();
       await page.waitForFunction(() => /DeepSeek Pro/.test(document.querySelector("#status")?.textContent || ""));
-      assert.deepEqual(sets, [{ agent: "claude", field: "model", value: "magpie/deepseek/pro" }]);
+      assert.deepEqual(sets, [{ agent: "claude", field: "model", value: "Echo/deepseek/pro" }]);
       assert.equal(await view.evaluate((v) => v.scrollTop), top, "the pick moved the page");
 
       // Codex's picker, Echo's models alone: the same tag, said once

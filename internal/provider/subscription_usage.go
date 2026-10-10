@@ -65,6 +65,13 @@ type QuotaWindow struct {
 	// only — one model's own, or a pool's — so the cap holds the account
 	// for those alone, and the GUI says which.
 	CapsSome bool `json:"capsSome,omitempty"`
+	// CapID is, beside Capped, how the window is known to a cap of its
+	// own (WindowCapID), for the GUI to set and show one.
+	CapID string `json:"capId,omitempty"`
+	// Holds is what the whole window holds, reckoned from magpie's own
+	// calls through the account (usage.WithWindowHolds), for the GUI only;
+	// nil where that can't be told honestly.
+	Holds *WindowHolds `json:"holds,omitempty"`
 	// matches further scopes pools whose membership isn't one model word.
 	matches func(string) bool
 	// partial is set on the windows of a reading that may leave some out:
@@ -144,9 +151,19 @@ var subscriptionUsageCache struct {
 	asked   bool          // the user asked (AskClaudeUsage): wait for the refresh
 }
 
-// OnSubscriptionUsage is told when a refresh has landed, for what shows a
-// stale copy meanwhile (the menu bar's text) to read the new one.
-var OnSubscriptionUsage func()
+// OnSubscriptionUsage sets what is told when a refresh has landed, for what
+// shows a stale copy meanwhile (the menu bar's text) to read the new one; nil
+// tells nothing. It is held atomically: a refresh runs in the background and
+// may be under way while it is set (#1023).
+func OnSubscriptionUsage(f func()) {
+	if f == nil {
+		onSubscriptionUsage.Store(nil)
+		return
+	}
+	onSubscriptionUsage.Store(&f)
+}
+
+var onSubscriptionUsage atomic.Pointer[func()]
 
 // subscriptionTimeout bounds one refresh; the vendors' endpoints can be
 // unreachable without a proxy, and then each fetch would hang to it.
@@ -181,10 +198,12 @@ func SubscriptionUsage(ctx context.Context) []SubscriptionQuota {
 				c.at = time.Time{} // asked meanwhile: read again
 			}
 			c.Unlock()
-			close(done)
-			if f := OnSubscriptionUsage; f != nil {
-				f()
+			// told before done is closed, so whoever waits for the refresh
+			// has it finished, hook and all
+			if f := onSubscriptionUsage.Load(); f != nil {
+				(*f)()
 			}
+			close(done)
 		}()
 	}
 	pending := c.pending
@@ -337,7 +356,7 @@ func fetchSubscriptionUsage(ctx context.Context) []SubscriptionQuota {
 		// signed out, Claude Code's own allowance is none: the account in
 		// its place is a saved one, read as the others are
 		if ls := accountsOf("claude"); len(ls) > 1 || p.Account.standIn {
-			fetches = append(fetches, perLogin(via("claude"), ls, "Claude Code", "claude-color")...)
+			fetches = append(fetches, perLogin(via("claude"), ls, accountCard("claude"))...)
 		} else {
 			fetches = append(fetches, withUser(ctx, p.Account.User, func() SubscriptionQuota {
 				return claudeSubscriptionUsage(viaLogin("claude", p.Account.User), p.Account.User)
@@ -353,7 +372,7 @@ func fetchSubscriptionUsage(ctx context.Context) []SubscriptionQuota {
 	if home, err := os.UserHomeDir(); err == nil {
 		if p, ok := codexAccount(home); ok && !hidden["codex"] {
 			if ls := accountsOf("codex"); len(ls) > 1 {
-				fetches = append(fetches, perLogin(via("codex"), ls, "Codex", "codex-color")...)
+				fetches = append(fetches, perLogin(via("codex"), ls, accountCard("codex"))...)
 			} else {
 				auth := filepath.Join(home, ".codex", "auth.json")
 				fetches = append(fetches, withUser(ctx, p.Account.User, func() SubscriptionQuota { return codexSubscriptionUsage(viaLogin("codex", p.Account.User), auth) }))
@@ -367,43 +386,43 @@ func fetchSubscriptionUsage(ctx context.Context) []SubscriptionQuota {
 		// gateway's GET /v1/magpie/quotas, however fresh its reading was
 		// (subscription_usage_test.go, TestCopilotQuotaWithoutEditorsSignIn).
 		if ls := copilotLoginList(); len(ls) > 0 && !hidden["copilot"] {
-			fetches = append(fetches, perLogin(via("copilot"), ls, "Copilot", "githubcopilot")...)
+			fetches = append(fetches, perLogin(via("copilot"), ls, accountCard("copilot"))...)
 		}
 	}
 	if moved("kiro") {
 	} else if key := kiroKey(); key != "" && !hidden["kiro"] {
 		fetches = append(fetches, func() SubscriptionQuota { return keepReading(ctx, readNow(kiroQuotaAt(via("kiro"), key, "")), "") })
 	} else if !hidden["kiro"] {
-		fetches = append(fetches, perLogin(via("kiro"), kiroLoginList(), "Kiro", "kiro-color")...)
+		fetches = append(fetches, perLogin(via("kiro"), kiroLoginList(), accountCard("kiro"))...)
 	}
 	if !moved("zcode") && !hidden["zcode"] {
-		fetches = append(fetches, perLogin(via("zcode"), zcodeLoginList(), "ZCode", "zcode")...)
+		fetches = append(fetches, perLogin(via("zcode"), zcodeLoginList(), accountCard("zcode"))...)
 	}
 	for _, w := range []*wbSite{wbCN, wbAI} {
 		if !moved(w.id) && !hidden[w.id] {
-			fetches = append(fetches, perLogin(via(w.id), wbLoginList(w), w.name, "workbuddy-color")...)
+			fetches = append(fetches, perLogin(via(w.id), wbLoginList(w), accountCard(w.id))...)
 		}
 	}
 	if !moved(CommandCodePlanID) && !hidden[CommandCodePlanID] {
-		fetches = append(fetches, perLogin(via(CommandCodePlanID), cmdLoginList(), "Command Code", "commandcode")...)
+		fetches = append(fetches, perLogin(via(CommandCodePlanID), cmdLoginList(), accountCard(CommandCodePlanID))...)
 	}
 	if !moved("qoder") && !hidden["qoder"] {
-		fetches = append(fetches, perLogin(via("qoder"), loginsOf(qoderLogins()), "Qoder", "qoder")...)
+		fetches = append(fetches, perLogin(via("qoder"), loginsOf(qoderLogins()), accountCard("qoder"))...)
 	}
 	if !moved(QoderCNID) && !hidden[QoderCNID] {
-		fetches = append(fetches, perLogin(via(QoderCNID), loginsOf(qoderLoginsOf(QoderCNID)), "Qoder CN", "qoder")...)
+		fetches = append(fetches, perLogin(via(QoderCNID), loginsOf(qoderLoginsOf(QoderCNID)), accountCard(QoderCNID))...)
 	}
 	if !moved("zed") && !hidden["zed"] {
-		fetches = append(fetches, perLogin(via("zed"), zedLoginList(), "Zed", "zed")...)
+		fetches = append(fetches, perLogin(via("zed"), zedLoginList(), accountCard("zed"))...)
 	}
 	if !moved("devin") && !hidden["devin"] {
-		fetches = append(fetches, perLogin(via("devin"), devinLoginList(), "Devin", "devin")...)
+		fetches = append(fetches, perLogin(via("devin"), devinLoginList(), accountCard("devin"))...)
 	}
 	if !moved("factory") && !hidden["factory"] {
-		fetches = append(fetches, perLogin(via("factory"), factoryLoginList(), "Factory", "factory")...)
+		fetches = append(fetches, perLogin(via("factory"), factoryLoginList(), accountCard("factory"))...)
 	}
 	if !moved(MiMoID) && !hidden[MiMoID] {
-		fetches = append(fetches, perLogin(via(MiMoID), mimoLoginList(), "Xiaomi MiMo", "mimocode")...)
+		fetches = append(fetches, perLogin(via(MiMoID), mimoLoginList(), accountCard(MiMoID))...)
 	}
 	for _, agent := range []string{"gemini", "antigravity"} {
 		if hidden[agent] {
@@ -453,12 +472,12 @@ func withUser(ctx context.Context, user string, f func() SubscriptionQuota) func
 
 // perLogin fetches each account's allowance on a card of its own: the
 // reading LoginUsage shows beside the account (loginReading).
-func perLogin(ctx context.Context, ls []Login, name, icon string) []func() SubscriptionQuota {
+func perLogin(ctx context.Context, ls []Login, face cardFace) []func() SubscriptionQuota {
 	var out []func() SubscriptionQuota
 	for _, l := range refreshLogins(ctx, ls) {
 		out = append(out, func() SubscriptionQuota {
 			q := loginReading(ctx, l).read
-			q.Name, q.Icon, q.User = name, icon, l.User
+			q.Name, q.Icon, q.User = face.name, face.icon, l.User
 			return q
 		})
 	}
@@ -743,7 +762,10 @@ func claudeWindows(ctx context.Context, user string, active bool) ([]QuotaWindow
 	}
 	c.m[key] = claudeUsageEntry{at: now, ws: ws, heard: e.heard, tried: now, wait: e.wait, whole: true}
 	c.Unlock()
-	return ws, nil
+	// as of now, as a kept reading is: /usage gives a reset to the minute
+	// and can lag it, so a window it still counts full may have started
+	// again already
+	return elapsed(ws, time.Now()), nil
 }
 
 var (
@@ -990,30 +1012,90 @@ func copilotSubscriptionUsage(ctx context.Context, githubToken, host string) Sub
 	} else if t, err := time.Parse("2006-01-02", data.ResetDay); err == nil {
 		resets = &t
 	}
+	// A Business or Enterprise seat's organization decides what happens
+	// past its allowance, so using it up pauses the seat whatever
+	// overage_permitted says, as VS Code's isChatQuotaExceeded has it.
+	managed := strings.EqualFold(data.Plan, "business") || strings.EqualFold(data.Plan, "enterprise")
 	for _, x := range []struct{ id, name string }{{"chat", "Chat requests"}, {"completions", "Completions"}, {"premium_interactions", "Premium requests"}} {
 		w, ok := data.Snapshots[x.id]
-		if ok && w.Unlimited {
+		if !ok {
+			continue
+		}
+		at := resets
+		if sec, ok := w.ResetAt.value(); ok && sec > 0 {
+			t := time.Unix(int64(sec), 0)
+			at = &t
+		}
+		if w.Unlimited {
+			// An organization's pooled premium allowance reads unlimited,
+			// and has_quota false when the pool is spent (#1063): VS Code
+			// pauses the seat then, so it is used up, not unlimited. Chat
+			// and completions say has_quota false under token-based
+			// billing whatever is left, and VS Code reads them unlimited.
+			if x.id == "premium_interactions" && w.HasQuota != nil && !*w.HasQuota {
+				q.Windows = append(q.Windows, QuotaWindow{Name: x.name, Used: 100, ResetsAt: at,
+					Span: 30 * 24 * time.Hour, Aside: w.Overage && !managed})
+				continue
+			}
 			unlimited = append(unlimited, QuotaWindow{Name: x.name, Unlimited: true, Display: "Unlimited", Aside: true})
 			continue
 		}
-		if !ok || !w.HasQuota || w.Entitlement <= 0 {
+		// has_quota isn't whether there is an allowance: GitHub says false
+		// for one used up, and under token-based billing for every one
+		// (#1063). The entitlement says it; 0 is none, as VS Code reads it.
+		ent, entOK := w.Entitlement.value()
+		if entOK && ent <= 0 {
 			continue
 		}
-		used := w.Entitlement - w.Remaining
-		q.Windows = append(q.Windows, QuotaWindow{Name: x.name, Used: 100 * used / w.Entitlement, ResetsAt: resets,
-			Display: fmt.Sprintf("%s / %s", compactNumber(used), compactNumber(w.Entitlement)),
-			Span:    30 * 24 * time.Hour, Aside: x.id == "completions"})
+		var used float64
+		display := ""
+		if rem, ok := w.Remaining.value(); entOK && ok {
+			n := max(0, ent-rem)
+			used = min(100, 100*n/ent)
+			display = fmt.Sprintf("%s / %s", compactNumber(n), compactNumber(ent))
+		} else if w.Percent != nil {
+			used = min(100, max(0, 100-*w.Percent))
+		} else {
+			// nothing says how much is used: unknown, never unlimited
+			continue
+		}
+		q.Windows = append(q.Windows, QuotaWindow{Name: x.name, Used: used, ResetsAt: at, Display: display,
+			Span:  30 * 24 * time.Hour,
+			Aside: x.id == "completions" || x.id == "premium_interactions" && w.Overage && !managed})
 	}
 	q.Windows = append(q.Windows, unlimited...)
 	return q
 }
 
+// copilotQuotaWire is one of /copilot_internal/user's quota_snapshots, as
+// VS Code's IQuotaSnapshotData has it: entitlement and quota_remaining
+// come as numbers or, under token-based billing, as strings ("3900").
 type copilotQuotaWire struct {
-	Unlimited   bool    `json:"unlimited"`
-	HasQuota    bool    `json:"has_quota"`
-	Entitlement float64 `json:"entitlement"`
-	Remaining   float64 `json:"quota_remaining"`
+	Unlimited   bool          `json:"unlimited"`
+	HasQuota    *bool         `json:"has_quota"`
+	Entitlement copilotNumber `json:"entitlement"`
+	Remaining   copilotNumber `json:"quota_remaining"`
+	Percent     *float64      `json:"percent_remaining"`
+	Overage     bool          `json:"overage_permitted"`
+	ResetAt     copilotNumber `json:"quota_reset_at"`
 }
+
+// copilotNumber is a JSON number or a string of one; absent, null or
+// unreadable is unknown.
+type copilotNumber struct {
+	n  float64
+	ok bool
+}
+
+func (c *copilotNumber) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(strings.TrimSpace(string(b)), `"`)
+	if n, err := strconv.ParseFloat(s, 64); err == nil && !math.IsNaN(n) && !math.IsInf(n, 0) {
+		*c = copilotNumber{n, true}
+	}
+	return nil
+}
+
+func (c copilotNumber) value() (float64, bool) { return c.n, c.ok }
 
 func compactNumber(n float64) string {
 	if n == float64(int64(n)) {

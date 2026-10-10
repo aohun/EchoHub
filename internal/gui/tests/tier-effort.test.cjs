@@ -15,15 +15,15 @@ const { test } = require("node:test");
 const { chromium, webkit } = require("playwright");
 
 const assets = path.resolve(__dirname, "../assets");
-const models = [{ value: "magpie/v/glm", label: "GLM", ref: "v/glm" }, { value: "magpie/v/flash", label: "Flash", ref: "v/flash" }];
+const models = [{ value: "Echo/v/glm", label: "GLM", ref: "v/glm" }, { value: "Echo/v/flash", label: "Flash", ref: "v/flash" }];
 const levels = ["low", "medium", "high"].map((value) => ({ value }));
 const tiers = ["opus", "sonnet", "haiku", "fable"];
 const claude = (id, routed) => ({
   id, name: "Claude Code", path: "/test/settings.json", icon: "claudecode-color", wired: routed,
   fields: [
-    { key: "model", label: "model", value: routed ? "magpie/v/glm" : "opus", options: routed ? models : [{ value: "opus" }] },
+    { key: "model", label: "model", value: routed ? "Echo/v/glm" : "opus", options: routed ? models : [{ value: "opus" }] },
     { key: "effort", label: "effort", value: "high", options: levels },
-    ...tiers.map((tier) => ({ key: tier, label: tier, value: tier === "haiku" && routed ? "magpie/v/flash" : "", options: models })),
+    ...tiers.map((tier) => ({ key: tier, label: tier, value: tier === "haiku" && routed ? "Echo/v/flash" : "", options: models })),
     ...tiers.map((tier) => ({ key: tier + "_effort", label: tier + " effort", value: "", options: routed ? levels : [] })),
     { key: "subagent", label: "subagents", value: "", options: routed ? models : [] },
     { key: "subagent_effort", label: "subagent effort", value: "", options: routed ? levels : [] },
@@ -128,6 +128,32 @@ for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium",
       assert.equal(await page.evaluate(() => scrollY), y, "a pick scrolled the page");
       // the session's effort is untouched
       assert.equal(await page.locator(`${cc} .field[data-key="effort"] .v`).textContent(), w.high);
+      assert.deepEqual(errors, []);
+    });
+  }
+}
+
+for (const engine of (process.env.BROWSER ? [process.env.BROWSER] : ["chromium", "webkit"])) {
+  for (const lang of ["en", "zh"]) {
+    test(`${engine} ${lang}: Claude Code tier pickers keep one width in a narrow window`, async (t) => {
+      const browser = await (engine === "webkit" ? webkit.launch() : chromium.launch({ channel: "chromium" }));
+      const page = await browser.newPage({ viewport: { width: 560, height: 700 } });
+      page.setDefaultTimeout(5000);
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(e.message));
+      await page.route("**/*", server(lang, []));
+      t.after(() => browser.close());
+      await page.goto("http://magpie.test/");
+      await page.locator(cc).waitFor();
+      await page.locator(`${cc} .ag-link`).click();
+      await page.locator(`${cc} .ag-exp`).waitFor();
+
+      const picks = page.locator(`${cc} .ag-exp .field.ag-pick`);
+      assert.equal(await picks.count(), tiers.length + 1);
+      const widths = await picks.evaluateAll((es) => es.map((e) => e.getBoundingClientRect().width));
+      assert.ok(widths.every((width) => Math.abs(width - widths[0]) < 0.5), `picker widths: ${widths.join(", ")}`);
+      assert.equal(Math.round(widths[0]), 220);
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "narrow Agents view must not overflow horizontally");
       assert.deepEqual(errors, []);
     });
   }
