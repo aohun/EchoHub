@@ -1,7 +1,5 @@
 > [!IMPORTANT]
-> **本项目是 [yetone/magpie](https://github.com/yetone/magpie) 的二次开发版本（fork）**
->
-> **本 fork 的新功能**
+> **本项目是 [yetone/magpie](https://github.com/yetone/magpie) 的二次开发版本**
 > - **Codex 重置提醒** — 登录 Codex 账号期间，每 5 分钟检查一次 [codex-resets.com](https://codex-resets.com)，OpenAI 一公告 Codex 限额重置就在软件内弹出提醒（Settings › 通知；dev 构建里有"测试"按钮，点击立即拉取）。
 
 <div align="center">
@@ -14,11 +12,11 @@
 
 Claude Code 跑 Kimi，Codex 跑 DeepSeek，Gemini CLI 跑 GLM，OpenCode 用你的 ChatGPT 订阅。<br>
 在菜单栏一点就能切换。所有 Agent 都走同一个本地网关，额度用完时自动切到下一个账号。
-
+<!-- 
 [![Release](https://img.shields.io/github/v/release/yetone/magpie-releases?label=release&color=111111)](https://github.com/yetone/magpie-releases/releases/latest) [![Stars](https://img.shields.io/github/stars/yetone/magpie?style=flat&color=111111)](https://github.com/yetone/magpie/stargazers) [![Discord](https://img.shields.io/badge/Discord-加入社区-5865F2?logo=discord&logoColor=white)](https://discord.gg/vGSnD3ZKQF) [![License](https://img.shields.io/badge/license-MIT-111111)](LICENSE)<br>
-![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white) ![Windows](https://img.shields.io/badge/Windows-0078D4?logo=windows&logoColor=white) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white) ![Termux](https://img.shields.io/badge/Termux-000000?logo=android&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white) ![Windows](https://img.shields.io/badge/Windows-0078D4?logo=windows&logoColor=white) ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black) ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white) ![Termux](https://img.shields.io/badge/Termux-000000?logo=android&logoColor=white) -->
 
-**[下载](https://usemagpie.ai/zh/)** · **[文档](https://usemagpie.ai/docs/zh/start)** · **[完整参考（英文）](docs/reference.md)** · **[Discord](https://discord.gg/vGSnD3ZKQF)** · [English](README.en.md) · **简体中文**
+**[下载](https://usemagpie.ai/zh/)** · **[文档](https://usemagpie.ai/docs/zh/start)** · **[完整参考](docs/reference.md)** · **[Discord](https://discord.gg/vGSnD3ZKQF)** · [English](README.en.md) · **简体中文**
 
 <br>
 
@@ -276,18 +274,6 @@ magpie tui                                      # 终端版完整界面
 - **[意图路由](https://usemagpie.ai/docs/zh/intent)**：按每轮对话的内容选择模型
 - **[导入链接](https://usemagpie.ai/docs/zh/import)**：给 provider 网站用的「添加到 magpie」按钮
 
-## 社区
-
-有问题、有想法，或者某个模型没显示出来？欢迎加入 **[Discord](https://discord.gg/vGSnD3ZKQF)**，或者[提一个 issue](https://github.com/yetone/magpie/issues)。
-
-如果 magpie 让你少改了一次配置文件，**点个 ⭐ 能让更多人发现它。**
-
-<a href="https://star-history.com/#yetone/magpie&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=yetone/magpie&type=Date&theme=dark">
-    <img src="https://api.star-history.com/svg?repos=yetone/magpie&type=Date" width="600" alt="Star history">
-  </picture>
-</a>
 
 ## 许可证
 
